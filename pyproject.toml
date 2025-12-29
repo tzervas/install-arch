@@ -35,8 +35,8 @@ docs = [
 [project.scripts]
 install-arch-dev = "install_arch.cli:cli"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "black>=23.0.0",

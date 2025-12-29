@@ -2,7 +2,6 @@
 
 import os
 import subprocess
-import sys
 import tomllib
 from pathlib import Path
 from typing import Dict, Any, List, Optional
@@ -11,7 +10,7 @@ from typing import Dict, Any, List, Optional
 class GuardrailsValidator:
     """Validates compliance with package functionality baseline guardrails."""
 
-    def __init__(self, guardrails_path: Path = None):
+    def __init__(self, guardrails_path: Optional[Path] = None):
         if guardrails_path is None:
             guardrails_path = Path(__file__).parent / "package-baseline.toml"
 
@@ -54,10 +53,11 @@ class GuardrailsValidator:
                 ["git", "rev-parse", "--git-dir"],
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
+                timeout=10
             )
             return result.returncode == 0
-        except (subprocess.CalledProcessError, FileNotFoundError):
+        except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
             return False
 
     def validate_temp_security(self, temp_dir: Path) -> bool:
@@ -86,21 +86,21 @@ class GuardrailsValidator:
     def check_compliance(self) -> Dict[str, bool]:
         """Run all compliance checks."""
         from .config import DevConfig
-        from .package_manager import PackageManager
-        from .filesystem import FileSystemOps
 
         config = DevConfig()
-        pkg_mgr = PackageManager(config)
-        fs_ops = FileSystemOps(config)
 
         results = {}
 
         # Check package manager
-        results["package_manager_supported"] = self.validate_package_manager(config.package_manager)
+        results["package_manager_supported"] = self.validate_package_manager(
+            config.package_manager
+        )
 
         # Check venv
         venv_path = Path(config.venv_path)
-        results["venv_properly_created"] = self.validate_venv_creation(config.package_manager, venv_path)
+        results["venv_properly_created"] = self.validate_venv_creation(
+            config.package_manager, venv_path
+        )
 
         # Check git operations
         results["git_operations_available"] = self.validate_git_operations()
@@ -108,7 +108,9 @@ class GuardrailsValidator:
         # Check temp security
         temp_base = Path(config.tmp_base_dir)
         if temp_base.exists():
-            results["temp_security_compliant"] = self.validate_temp_security(temp_base)
+            results["temp_security_compliant"] = self.validate_temp_security(
+                temp_base
+            )
         else:
             results["temp_security_compliant"] = True  # Not created yet
 
@@ -135,13 +137,19 @@ class GuardrailsValidator:
             violations.append("Temporary directory security not compliant")
 
         if not compliance.get("devcontainer_usage", True):
-            violations.append("Work not being done in devcontainer (when required)")
+            violations.append(
+                "Work not being done in devcontainer (when required)"
+            )
 
         return violations
 
     def enforce_guardrails(self) -> None:
-        """Enforce guardrails by checking compliance and raising errors if violated."""
+        """Enforce guardrails by checking compliance and raising errors if
+        violated.
+        """
         violations = self.get_violations()
         if violations:
-            error_msg = "Guardrails violations detected:\n" + "\n".join(f"- {v}" for v in violations)
+            error_msg = "Guardrails violations detected:\n" + "\n".join(
+                f"- {v}" for v in violations
+            )
             raise RuntimeError(error_msg)
