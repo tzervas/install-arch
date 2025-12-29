@@ -1,0 +1,26 @@
+# Development Environment Configuration
+# This file defines the tools and package managers used for development
+
+[package_manager]
+# Supported options: uv, pip, poetry, pipenv
+# Default: uv (fast Python package installer)
+tool = "uv"
+
+# Virtual environment settings
+venv_path = ".venv"
+python_version = "3.11"
+
+[filesystem]
+# Use git for all file operations in repositories
+use_git_ops = true
+
+# Temporary file management
+tmp_base_dir = "/tmp/install-arch-dev"
+use_secure_tmp = true
+
+[tools]
+# Tool-specific configurations
+uv = { install_url = "https://astral.sh/uv/install.sh" }
+pip = { upgrade_pip = true }
+poetry = { config_virtualenvs_in_project = true }
+pipenv = { pipfile_location = "Pipfile" }

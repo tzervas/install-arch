@@ -1,0 +1,87 @@
+# Package Functionality Baseline Guardrails
+# This file defines the baseline requirements and rules for package management,
+# filesystem operations, and development environment setup in the install-arch project.
+
+[baseline_requirements]
+# All Python package management must use configured tool (uv by default)
+python_package_management = "configured_tool"
+
+# All virtual environments must be managed by the configured tool
+venv_management = "tool_managed"
+
+# All filesystem operations in repositories must use git commands when possible
+filesystem_operations = "git_preferred"
+
+# All temporary files must use secure creation methods
+temporary_files = "secure_mktemp"
+
+# Development work requiring additional packages must use devcontainer
+development_environment = "devcontainer_isolated"
+
+[tool_configuration]
+# Supported package managers with their configurations
+uv = {
+    install_method = "curl_script",
+    venv_command = "uv venv",
+    install_command = "uv pip install",
+    dev_flag = "--dev"
+}
+
+pip = {
+    venv_command = "python -m venv",
+    install_command = "pip install",
+    dev_handling = "requirements_files"
+}
+
+poetry = {
+    venv_command = "poetry env use",
+    install_command = "poetry install",
+    dev_flag = "--with=dev"
+}
+
+pipenv = {
+    venv_command = "pipenv --python",
+    install_command = "pipenv install",
+    dev_flag = "--dev"
+}
+
+[filesystem_rules]
+# Git operations are preferred for tracked files
+git_operations = ["mv", "rm", "add", "commit"]
+
+# Secure temporary directory creation
+temp_security = {
+    use_mktemp = true,
+    restrictive_permissions = true,
+    base_directory = "/tmp/install-arch-dev"
+}
+
+# File organization rules
+temp_structure = {
+    agent_files = "tmp/agents/",
+    build_artifacts = "tmp/build/",
+    test_data = "tmp/tests/",
+    logs = "tmp/logs/"
+}
+
+[devcontainer_requirements]
+# Devcontainer must be used for any work requiring additional packages
+isolation_level = "full"
+base_image = "ubuntu"
+features = ["python", "git", "github-cli"]
+post_create_setup = "automated"
+
+[agent_rules]
+# Rules for agent behavior
+package_installation = "devcontainer_only"
+venv_creation = "tool_specific"
+file_operations = "git_aware"
+temp_file_creation = "secure_structured"
+
+[compliance_checks]
+# Automated checks to ensure compliance
+check_package_manager = true
+check_venv_isolation = true
+check_git_operations = true
+check_temp_security = true
+validate_devcontainer_usage = true

@@ -2,6 +2,22 @@
 
 This project contains a complete automated installation system for Arch Linux configured as a high-performance virtualization host.
 
+## Development
+
+For development work requiring additional packages or tools, use the devcontainer environment:
+
+```bash
+# Open in VS Code devcontainer
+code .
+# Click "Reopen in Container" when prompted
+```
+
+See [Development Setup](docs/development-setup.md) for detailed instructions on:
+- Package management with uv/poetry/pip/pipenv
+- Secure filesystem operations
+- Guardrails compliance
+- Multi-tool parameterization
+
 ## Project Structure
 
 ```
