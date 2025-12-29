@@ -2,7 +2,7 @@
 # System Update Script for Read-Only Root with Btrfs Snapshots
 # This script creates a snapshot, updates in a chroot, and swaps to the new snapshot
 
-set -e
+set -euo pipefail
 
 # Logging
 LOG_FILE="/var/log/system-update.log"
