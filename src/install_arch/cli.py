@@ -1,5 +1,6 @@
 """Command-line interface for development environment management."""
 
+import sys
 import click
 from pathlib import Path
 
@@ -127,7 +128,7 @@ def clean_temp(ctx):
 @click.pass_context
 def check_guardrails(ctx):
     """Check compliance with package functionality baseline guardrails."""
-    validator = ctx.obj['validator']
+    validator = ctx.obj.get('validator', GuardrailsValidator())
 
     compliance = validator.check_compliance()
 
@@ -141,17 +142,17 @@ def check_guardrails(ctx):
         click.echo("\nViolations found:")
         for violation in violations:
             click.echo(f"  - {violation}")
-        return 1
+        sys.exit(1)
     else:
         click.echo("\nAll guardrails compliant!")
-        return 0
+        sys.exit(0)
 
 
 @cli.command()
 @click.pass_context
 def enforce_guardrails(ctx):
     """Enforce guardrails compliance (will exit with error if violations found)."""
-    validator = ctx.obj['validator']
+    validator = ctx.obj.get('validator', GuardrailsValidator())
 
     try:
         validator.enforce_guardrails()

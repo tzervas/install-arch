@@ -13,7 +13,12 @@ class TestGuardrailsValidator:
     def test_init_with_default_path(self):
         """Test initialization with default guardrails path."""
         validator = GuardrailsValidator()
-        expected_path = Path(__file__).parent.parent / "src" / "install_arch" / "package-baseline.toml"
+        expected_path = (
+            Path(__file__).parent.parent
+            / ".github"
+            / "guardrails"
+            / "package-baseline.toml"
+        )
         assert validator.guardrails_path == expected_path
 
     def test_init_with_custom_path(self):
@@ -117,6 +122,12 @@ class TestGuardrailsValidator:
             "git_operations_available": True,
             "temp_security_compliant": True,
             "devcontainer_usage": True,
+        }), patch.object(validator, "validate_baseline_requirements", return_value={
+            "python_package_management": True,
+            "venv_management": True,
+            "filesystem_operations": True,
+            "temporary_files": True,
+            "development_environment": True,
         }):
             violations = validator.get_violations()
             assert violations == []
@@ -130,6 +141,12 @@ class TestGuardrailsValidator:
             "git_operations_available": False,
             "temp_security_compliant": True,
             "devcontainer_usage": True,
+        }), patch.object(validator, "validate_baseline_requirements", return_value={
+            "python_package_management": True,
+            "venv_management": True,
+            "filesystem_operations": True,
+            "temporary_files": True,
+            "development_environment": True,
         }):
             violations = validator.get_violations()
             expected = [
