@@ -89,6 +89,7 @@ class TestGuardrailsValidator:
         # Cleanup
         temp_dir.rmdir()
 
+    @patch.dict("os.environ", {}, clear=True)
     def test_validate_temp_security_bad(self):
         """Test temp directory security validation when bad."""
         validator = GuardrailsValidator()

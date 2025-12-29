@@ -168,6 +168,7 @@ class TestCLI:
             assert result.exit_code == 0
             assert 'All guardrails compliant' in result.output
 
+    @patch.dict("os.environ", {}, clear=True)
     def test_check_guardrails_command_violations(self, runner):
         """Test check-guardrails command with violations."""
         result = runner.invoke(cli, ['check-guardrails'])
@@ -198,6 +199,7 @@ class TestCLI:
                         assert result.exit_code == 0
                         assert 'Guardrails compliance confirmed' in result.output
 
+    @patch.dict("os.environ", {}, clear=True)
     def test_enforce_guardrails_command_violations(self, runner):
         """Test enforce-guardrails command with violations."""
         result = runner.invoke(cli, ['enforce-guardrails'])
