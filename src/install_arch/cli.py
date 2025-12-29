@@ -162,5 +162,70 @@ def enforce_guardrails(ctx):
         sys.exit(1)
 
 
+@cli.command()
+@click.pass_context
+def local_ci(ctx):
+    """Run local CI-equivalent checks (guardrails, tests, linting)."""
+    import subprocess
+
+    click.echo("🚀 Running local CI checks...")
+    click.echo()
+
+    # Colors for output
+    GREEN = '\033[0;32m'
+    RED = '\033[0;31m'
+    NC = '\033[0m'
+
+    def run_check(name, command, cwd=None):
+        """Run a check command and return success status."""
+        click.echo(f"📋 {name}")
+        try:
+            result = subprocess.run(
+                command,
+                shell=True,
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                timeout=300  # 5 minute timeout
+            )
+            if result.returncode == 0:
+                click.echo(f"{GREEN}✅ {name} passed{NC}")
+                return True
+            else:
+                click.echo(f"{RED}❌ {name} failed{NC}")
+                click.echo("Output:", err=True)
+                click.echo(result.stdout, err=True)
+                click.echo(result.stderr, err=True)
+                return False
+        except subprocess.TimeoutExpired:
+            click.echo(f"{RED}❌ {name} timed out{NC}", err=True)
+            return False
+        except Exception as e:
+            click.echo(f"{RED}❌ {name} error: {e}{NC}", err=True)
+            return False
+
+    checks = [
+        ("Guardrails Check", "uv run python -m install_arch.cli check-guardrails"),
+        ("Tests with Coverage", "uv run pytest tests/ -v --cov=src/install_arch --cov-report=term-missing --cov-fail-under=80"),
+        ("Flake8", "uv run flake8 src/ tests/"),
+        ("MyPy", "uv run mypy src/install_arch/"),
+        ("Black Format Check", "uv run black --check src/ tests/"),
+        ("Isort Import Check", "uv run isort --check-only src/ tests/"),
+    ]
+
+    all_passed = True
+    for name, command in checks:
+        if not run_check(name, command):
+            all_passed = False
+
+    click.echo()
+    if all_passed:
+        click.echo(f"{GREEN}🎉 All local CI checks passed! Ready to commit and push.{NC}")
+        sys.exit(0)
+    else:
+        click.echo(f"{RED}❌ Some checks failed. Please fix issues before committing.{NC}", err=True)
+        sys.exit(1)
+
+
 if __name__ == '__main__':
     cli()

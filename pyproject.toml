@@ -34,6 +34,7 @@ docs = [
 
 [project.scripts]
 install-arch-dev = "install_arch.cli:cli"
+local-ci = "install_arch.cli:local_ci"
 
 [dependency-groups]
 dev = [

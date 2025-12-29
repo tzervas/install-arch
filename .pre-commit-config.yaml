@@ -8,6 +8,14 @@ repos:
         pass_filenames: false
         stages: [commit]
 
+      - id: test
+        name: Run Tests
+        entry: uv run pytest tests/ -x --tb=short
+        language: system
+        pass_filenames: false
+        stages: [commit]
+        files: ^(src/|tests/)
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
