@@ -13,7 +13,7 @@ from .config import DevConfig
 class FileSystemOps:
     """Filesystem operations with git integration and secure temp handling."""
 
-    def __init__(self, config: DevConfig = None):
+    def __init__(self, config: Optional[DevConfig] = None):
         self.config = config or DevConfig()
         self.use_git = self.config.use_git_ops
         self.tmp_base = Path(self.config.tmp_base_dir)
@@ -22,7 +22,9 @@ class FileSystemOps:
         # Ensure tmp base directory exists
         self.tmp_base.mkdir(parents=True, exist_ok=True)
 
-    def _run_git_command(self, cmd: List[str], cwd: Path = None) -> subprocess.CompletedProcess:
+    def _run_git_command(
+        self, cmd: List[str], cwd: Optional[Path] = None
+    ) -> subprocess.CompletedProcess:
         """Run a git command."""
         if not self.use_git:
             raise RuntimeError("Git operations disabled in configuration")
@@ -33,7 +35,7 @@ class FileSystemOps:
                 cwd=cwd or Path.cwd(),
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
         except subprocess.CalledProcessError as e:
             print(f"Git command failed: git {' '.join(cmd)}")
@@ -84,7 +86,6 @@ class FileSystemOps:
         """Create a secure temporary directory."""
         if self.secure_tmp:
             # Use mktemp for secure temp directory
-            import tempfile
             temp_dir = Path(tempfile.mkdtemp(prefix=prefix, dir=self.tmp_base))
             # Set restrictive permissions
             temp_dir.chmod(0o700)
@@ -97,7 +98,6 @@ class FileSystemOps:
     def create_temp_file(self, suffix: str = "", prefix: str = "install-arch-") -> Path:
         """Create a secure temporary file."""
         if self.secure_tmp:
-            import tempfile
             fd, path = tempfile.mkstemp(suffix=suffix, prefix=prefix, dir=self.tmp_base)
             os.close(fd)  # Close the file descriptor
             temp_file = Path(path)
@@ -124,7 +124,7 @@ class FileSystemOps:
 
         try:
             result = self._run_git_command(["ls-files", pattern])
-            return [Path(line) for line in result.stdout.strip().split('\n') if line]
+            return [Path(line) for line in result.stdout.strip().split("\n") if line]
         except subprocess.CalledProcessError:
             return []
 

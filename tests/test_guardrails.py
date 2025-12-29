@@ -1,9 +1,11 @@
 """Tests for guardrails validation."""
 
 import subprocess
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 from install_arch.guardrails import GuardrailsValidator
 
 
@@ -136,38 +138,60 @@ class TestGuardrailsValidator:
     def test_get_violations_none(self):
         """Test getting violations when all compliant."""
         validator = GuardrailsValidator()
-        with patch.object(validator, "check_compliance", return_value={
-            "package_manager_supported": True,
-            "venv_properly_created": True,
-            "git_operations_available": True,
-            "temp_security_compliant": True,
-            "devcontainer_usage": True,
-        }), patch.object(validator, "validate_baseline_requirements", return_value={
-            "python_package_management": True,
-            "venv_management": True,
-            "filesystem_operations": True,
-            "temporary_files": True,
-            "development_environment": True,
-        }):
+        with (
+            patch.object(
+                validator,
+                "check_compliance",
+                return_value={
+                    "package_manager_supported": True,
+                    "venv_properly_created": True,
+                    "git_operations_available": True,
+                    "temp_security_compliant": True,
+                    "devcontainer_usage": True,
+                },
+            ),
+            patch.object(
+                validator,
+                "validate_baseline_requirements",
+                return_value={
+                    "python_package_management": True,
+                    "venv_management": True,
+                    "filesystem_operations": True,
+                    "temporary_files": True,
+                    "development_environment": True,
+                },
+            ),
+        ):
             violations = validator.get_violations()
             assert violations == []
 
     def test_get_violations_some(self):
         """Test getting violations when some not compliant."""
         validator = GuardrailsValidator()
-        with patch.object(validator, "check_compliance", return_value={
-            "package_manager_supported": False,
-            "venv_properly_created": True,
-            "git_operations_available": False,
-            "temp_security_compliant": True,
-            "devcontainer_usage": True,
-        }), patch.object(validator, "validate_baseline_requirements", return_value={
-            "python_package_management": True,
-            "venv_management": True,
-            "filesystem_operations": True,
-            "temporary_files": True,
-            "development_environment": True,
-        }):
+        with (
+            patch.object(
+                validator,
+                "check_compliance",
+                return_value={
+                    "package_manager_supported": False,
+                    "venv_properly_created": True,
+                    "git_operations_available": False,
+                    "temp_security_compliant": True,
+                    "devcontainer_usage": True,
+                },
+            ),
+            patch.object(
+                validator,
+                "validate_baseline_requirements",
+                return_value={
+                    "python_package_management": True,
+                    "venv_management": True,
+                    "filesystem_operations": True,
+                    "temporary_files": True,
+                    "development_environment": True,
+                },
+            ),
+        ):
             violations = validator.get_violations()
             expected = [
                 "Package manager not supported by guardrails",

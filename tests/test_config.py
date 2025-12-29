@@ -1,8 +1,7 @@
 """Tests for configuration management."""
 
-import pytest
 from pathlib import Path
-from unittest.mock import patch
+
 from install_arch.config import DevConfig
 
 
@@ -12,7 +11,9 @@ class TestDevConfig:
     def test_init_with_default_path(self):
         """Test initialization with default config path."""
         config = DevConfig()
-        expected_path = Path(__file__).parent.parent / "src" / "install_arch" / "dev-config.toml"
+        expected_path = (
+            Path(__file__).parent.parent / "src" / "install_arch" / "dev-config.toml"
+        )
         # Since dev-config.toml exists in project root, it should use that
         expected_path = Path(__file__).parent.parent / "dev-config.toml"
         assert config.config_path == expected_path
