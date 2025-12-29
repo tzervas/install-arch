@@ -4,7 +4,10 @@
 set -e
 
 # Configuration
-ISO_PATH="/home/spooky/Documents/projects/install-arch/iso/arch/archlinux-2025.12.01-x86_64.iso"
+ISO_DIR="/home/spooky/Documents/projects/install-arch/iso"
+ISO_NAME="archlinux-2025.12.01-x86_64.iso"
+ISO_PATH="${ISO_DIR}/${ISO_NAME}"
+ISO_URL="https://mirror.rackspace.com/archlinux/iso/2025.12.01/${ISO_NAME}"
 CONFIG_DIR="/home/spooky/Documents/projects/install-arch/configs"
 USB_DEVICE="/dev/sdb"
 USB_PARTITION="${USB_DEVICE}1"
@@ -28,10 +31,26 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-# Verify ISO exists
+# Check and download ISO if needed
 if [ ! -f "$ISO_PATH" ]; then
-    echo -e "${RED}Error: ISO file not found at $ISO_PATH${NC}"
-    exit 1
+    echo -e "${YELLOW}ISO file not found. Downloading from Arch Linux mirror...${NC}"
+    mkdir -p "$ISO_DIR"
+    if command -v wget >/dev/null 2>&1; then
+        wget -O "$ISO_PATH" "$ISO_URL"
+    elif command -v curl >/dev/null 2>&1; then
+        curl -o "$ISO_PATH" "$ISO_URL"
+    else
+        echo -e "${RED}Error: Neither wget nor curl found. Please install one to download the ISO.${NC}"
+        exit 1
+    fi
+    
+    if [ ! -f "$ISO_PATH" ]; then
+        echo -e "${RED}Error: Failed to download ISO${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}ISO downloaded successfully${NC}"
+else
+    echo -e "${GREEN}Using existing ISO: $ISO_PATH${NC}"
 fi
 
 # Verify config directory exists

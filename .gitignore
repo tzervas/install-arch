@@ -1,0 +1,109 @@
+# Arch Linux ISO files (download separately - see iso/README.md)
+*.iso
+*.tar
+*.tar.zst
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+
+# Signature and checksum files
+*.sig
+*sums.txt
+*b2sums.txt
+
+# Other large files
+*.img
+*.qcow2
+*.vmdk
+*.vdi
+
+# Temporary files
+*.tmp
+*.swp
+*.bak
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.code-workspace
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesis
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
+logs/
+*.log
+
+# Secrets and sensitive files
+secrets/
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+id_rsa
+id_dsa
+*.password
+*secret*
+*token*
+*credential*
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+
+# Docker
+.dockerignore
+
+# Temporary directories
+tmp/
+temp/

@@ -144,6 +144,9 @@
 - Test changes before merging
 - Maintain changelog for releases
 - Tag important milestones
+- Never commit directly to main branch - only via PR from dev branch with owner approval
+- Always check .gitignore before adding files and never commit secrets or sensitive data
+- Large files (ISOs, images) are downloaded on-demand, not stored in repository
 
 ### Collaboration
 - Use GitHub Copilot agents for assistance
