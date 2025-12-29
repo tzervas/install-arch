@@ -75,12 +75,22 @@ fi
 
 # Verify ISO integrity
 echo -e "${YELLOW}Verifying ISO integrity...${NC}"
-# Temporarily disabled due to sha256sum bug
-# if ! sha256sum -c "$ISO_DIR/sha256sums.txt" --ignore-missing "$ISO_PATH" >/dev/null 2>&1; then
-#     echo -e "${RED}Error: ISO verification failed${NC}"
-#     exit 1
-# fi
-echo -e "${GREEN}ISO verified (manual check passed)${NC}"
+if ! sha256sum -c "$ISO_DIR/sha256sums.txt" --ignore-missing "$ISO_PATH" >/dev/null 2>&1; then
+    echo -e "${RED}Error: ISO verification failed${NC}"
+    echo -e "${YELLOW}Expected checksums:${NC}"
+    grep "$ISO_NAME" "$ISO_DIR/sha256sums.txt" || echo "No checksum found for $ISO_NAME"
+    echo -e "${YELLOW}Actual checksum:${NC}"
+    sha256sum "$ISO_PATH"
+    exit 1
+fi
+echo -e "${GREEN}ISO verified successfully${NC}"
+
+# Calculate ISO size for partitioning
+echo -e "${YELLOW}Calculating ISO size...${NC}"
+ISO_SIZE_BYTES=$(stat -c%s "$ISO_PATH")
+ISO_SIZE_MB=$(( (ISO_SIZE_BYTES + 1024*1024 - 1) / (1024*1024) ))  # Round up to nearest MB
+ISO_PARTITION_SIZE_MB=$(( ISO_SIZE_MB + 100 ))  # Add 100MB buffer
+echo -e "${GREEN}ISO size: ${ISO_SIZE_MB}MB, Partition size: ${ISO_PARTITION_SIZE_MB}MB${NC}"
 
 # Verify config directory exists
 if [ ! -d "$CONFIG_DIR" ]; then
@@ -124,9 +134,18 @@ sleep 1
 # Partition the USB device
 echo -e "${YELLOW}Partitioning USB device...${NC}"
 parted -s "$USB_DEVICE" mklabel msdos
-parted -s "$USB_DEVICE" mkpart primary 1MiB 2048MiB  # ISO partition (2GB)
-parted -s "$USB_DEVICE" mkpart primary fat32 2048MiB 100%  # Config partition
-parted -s "$USB_DEVICE" set 1 boot on
+if ! parted -s "$USB_DEVICE" mkpart primary 1MiB ${ISO_PARTITION_SIZE_MB}MiB; then
+    echo -e "${RED}Error: Failed to create ISO partition${NC}"
+    exit 1
+fi
+if ! parted -s "$USB_DEVICE" mkpart primary fat32 ${ISO_PARTITION_SIZE_MB}MiB 100%; then
+    echo -e "${RED}Error: Failed to create config partition${NC}"
+    exit 1
+fi
+if ! parted -s "$USB_DEVICE" set 1 boot on; then
+    echo -e "${RED}Error: Failed to set boot flag${NC}"
+    exit 1
+fi
 
 # Wait for partitions to be recognized
 echo -e "${YELLOW}Syncing and waiting for partitions...${NC}"
@@ -137,7 +156,10 @@ sleep 2
 
 # Write ISO to first partition
 echo -e "${YELLOW}Writing ISO to USB partition (this will take 5-10 minutes)...${NC}"
-dd if="$ISO_PATH" of="${USB_DEVICE}1" bs=4M status=progress oflag=sync conv=fsync
+if ! dd if="$ISO_PATH" of="${USB_DEVICE}1" bs=4M status=progress oflag=sync conv=fsync; then
+    echo -e "${RED}Error: Failed to write ISO to USB device${NC}"
+    exit 1
+fi
 
 # Wait for kernel to recognize the new partition table
 echo ""
@@ -149,7 +171,10 @@ sleep 2
 
 # Format the config partition
 echo -e "${YELLOW}Formatting config partition as FAT...${NC}"
-mkfs.vfat "${USB_DEVICE}2" -n CONFIGS
+if ! mkfs.vfat "${USB_DEVICE}2" -n CONFIGS; then
+    echo -e "${RED}Error: Failed to format config partition${NC}"
+    exit 1
+fi
 
 # Wait for formatting to complete
 sync
