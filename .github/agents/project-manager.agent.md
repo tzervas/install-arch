@@ -2,10 +2,7 @@
 name: project-manager
 description: Manages project planning, tracking, and milestone achievement for install-arch
 tools:
-  - read_file
-  - create_file
-  - replace_string_in_file
-  - semantic_search
+  ['vscode', 'execute', 'read', 'edit', 'search', 'web', 'copilot-container-tools/*', 'agent', 'pylance-mcp-server/*', 'ms-python.python/getPythonEnvironmentInfo', 'ms-python.python/getPythonExecutableCommand', 'ms-python.python/installPythonPackage', 'ms-python.python/configurePythonEnvironment', 'ms-toolsai.jupyter/configureNotebook', 'ms-toolsai.jupyter/listNotebookPackages', 'ms-toolsai.jupyter/installNotebookPackages', 'todo']
 model: gpt-4o-latest
 handoffs:
   - label: Execute planned tasks
