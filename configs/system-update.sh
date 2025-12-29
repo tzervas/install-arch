@@ -52,6 +52,13 @@ fi
 
 echo -e "${GREEN}Root device: $ROOT_DEVICE${NC}"
 
+# Check filesystem type
+FS_TYPE=$(findmnt -n -o FSTYPE /)
+if [ "$FS_TYPE" != "btrfs" ]; then
+    echo -e "${RED}Error: Read-only root updates require Btrfs filesystem${NC}"
+    exit 1
+fi
+
 # Get current subvolume
 CURRENT_SUBVOL=$(btrfs subvolume show / | grep "Name:" | awk '{print $2}')
 if [ -z "$CURRENT_SUBVOL" ]; then
@@ -77,6 +84,33 @@ fi
 # Mount the snapshot read-write
 MOUNT_POINT="/mnt/update"
 mkdir -p "$MOUNT_POINT"
+
+# Function to cleanup mounts
+cleanup() {
+    echo -e "${YELLOW}Cleaning up mounts...${NC}"
+    umount "$MOUNT_POINT/dev/shm" 2>/dev/null || true
+    umount "$MOUNT_POINT/dev/pts" 2>/dev/null || true
+    umount "$MOUNT_POINT/dev" 2>/dev/null || true
+    umount "$MOUNT_POINT/run" 2>/dev/null || true
+    umount "$MOUNT_POINT/sys" 2>/dev/null || true
+    umount "$MOUNT_POINT/proc" 2>/dev/null || true
+    umount "$MOUNT_POINT" 2>/dev/null || true
+    rmdir "$MOUNT_POINT" 2>/dev/null || true
+}
+
+# Function to rollback on failure
+rollback() {
+    echo -e "${RED}Update failed. Rolling back...${NC}"
+    cleanup
+    if [ -n "$SNAPSHOT_NAME" ] && btrfs subvolume show "$SNAPSHOT_NAME" >/dev/null 2>&1; then
+        echo -e "${YELLOW}Deleting failed snapshot: $SNAPSHOT_NAME${NC}"
+        btrfs subvolume delete "$SNAPSHOT_NAME" 2>/dev/null || true
+    fi
+    echo -e "${GREEN}Rollback complete${NC}"
+}
+
+# Set trap for rollback and cleanup
+trap rollback EXIT INT TERM
 
 echo -e "${YELLOW}Mounting snapshot at $MOUNT_POINT${NC}"
 if [ "$DRY_RUN" = false ]; then
@@ -114,19 +148,6 @@ if [ "$DRY_RUN" = false ]; then
 else
     echo -e "${BLUE}[DRY RUN] Would setup chroot environment${NC}"
 fi
-rollback() {
-    echo -e "${RED}Update failed. Rolling back...${NC}"
-    if [ -n "$SNAPSHOT_NAME" ] && btrfs subvolume show "$SNAPSHOT_NAME" >/dev/null 2>&1; then
-        echo -e "${YELLOW}Deleting failed snapshot: $SNAPSHOT_NAME${NC}"
-        btrfs subvolume delete "$SNAPSHOT_NAME" 2>/dev/null || true
-    fi
-    echo -e "${GREEN}Rollback complete${NC}"
-}
-
-# Set trap for rollback and cleanup
-trap 'rollback; cleanup' EXIT INT TERM
-
-echo -e "${GREEN}Chroot environment ready${NC}"
 echo ""
 
 # Perform update in chroot
