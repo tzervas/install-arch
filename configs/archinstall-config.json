@@ -1,0 +1,222 @@
+{
+    "config_version": "2.6.0",
+    "disk_config": {
+        "device_modifications": [
+            {
+                "device": "/dev/nvme0n1",
+                "partitions": [
+                    {
+                        "btrfs": [],
+                        "flags": [
+                            "Boot",
+                            "ESP"
+                        ],
+                        "fs_type": "fat32",
+                        "length": {
+                            "unit": "GiB",
+                            "value": 1
+                        },
+                        "mount_options": [],
+                        "mountpoint": "/boot",
+                        "obj_id": "boot-partition",
+                        "start": {
+                            "unit": "MiB",
+                            "value": 1
+                        },
+                        "status": "create",
+                        "type": "primary"
+                    },
+                    {
+                        "btrfs": [
+                            {
+                                "mountpoint": "/",
+                                "name": "root"
+                            },
+                            {
+                                "mountpoint": "/home",
+                                "name": "home"
+                            },
+                            {
+                                "mountpoint": "/.snapshots",
+                                "name": "snapshots"
+                            },
+                            {
+                                "mountpoint": "/var/log",
+                                "name": "log"
+                            }
+                        ],
+                        "flags": [],
+                        "fs_type": "btrfs",
+                        "length": {
+                            "unit": "GiB",
+                            "value": 200
+                        },
+                        "mount_options": [
+                            "compress=zstd:1",
+                            "noatime"
+                        ],
+                        "mountpoint": null,
+                        "obj_id": "root-partition",
+                        "start": {
+                            "unit": "GiB",
+                            "value": 1
+                        },
+                        "status": "create",
+                        "type": "primary",
+                        "btrfs_encryption": {
+                            "encryption": "luks",
+                            "password": ""
+                        }
+                    },
+                    {
+                        "btrfs": [
+                            {
+                                "mountpoint": "/data",
+                                "name": "data"
+                            }
+                        ],
+                        "flags": [],
+                        "fs_type": "btrfs",
+                        "length": {
+                            "unit": "%",
+                            "value": 100
+                        },
+                        "mount_options": [
+                            "compress=zstd:1",
+                            "noatime"
+                        ],
+                        "mountpoint": null,
+                        "obj_id": "data-partition",
+                        "start": {
+                            "unit": "GiB",
+                            "value": 201
+                        },
+                        "status": "create",
+                        "type": "primary",
+                        "btrfs_encryption": {
+                            "encryption": "luks",
+                            "password": ""
+                        }
+                    }
+                ],
+                "wipe": true
+            }
+        ]
+    },
+    "bootloader": "systemd-bootctl",
+    "swap": false,
+    "hostname": "kang-virt-host",
+    "kernels": [
+        "linux",
+        "linux-lts"
+    ],
+    "locale_config": {
+        "kb_layout": "us",
+        "sys_enc": "UTF-8",
+        "sys_lang": "en_US"
+    },
+    "mirror_config": {
+        "mirror_regions": {
+            "United States": [
+                "https://mirrors.kernel.org/archlinux/$repo/os/$arch",
+                "https://mirror.rackspace.com/archlinux/$repo/os/$arch"
+            ]
+        }
+    },
+    "network_config": {
+        "type": "nm"
+    },
+    "no_pkg_lookups": false,
+    "ntp": true,
+    "offline": false,
+    "packages": [
+        "base-devel",
+        "git",
+        "vim",
+        "nano",
+        "wget",
+        "curl",
+        "htop",
+        "neofetch",
+        "tmux",
+        "networkmanager",
+        "network-manager-applet",
+        "openssh",
+        "qemu-full",
+        "libvirt",
+        "virt-manager",
+        "edk2-ovmf",
+        "dnsmasq",
+        "bridge-utils",
+        "iptables-nft",
+        "nvidia-dkms",
+        "nvidia-utils",
+        "nvidia-settings",
+        "lib32-nvidia-utils",
+        "intel-ucode",
+        "linux-headers",
+        "linux-lts-headers",
+        "btrfs-progs",
+        "snapper",
+        "snap-pac",
+        "grub-btrfs",
+        "python",
+        "python-pip",
+        "docker",
+        "docker-compose",
+        "xorg-server",
+        "xorg-apps",
+        "xorg-xinit",
+        "plasma-desktop",
+        "plasma-wayland-session",
+        "plasma-nm",
+        "plasma-pa",
+        "kde-applications-meta",
+        "sddm",
+        "konsole",
+        "dolphin",
+        "firefox",
+        "xf86-video-intel",
+        "mesa",
+        "vulkan-intel",
+        "lib32-mesa",
+        "lib32-vulkan-intel",
+        "bluez",
+        "bluez-utils",
+        "pulseaudio-bluetooth",
+        "cups",
+        "rsync",
+        "cronie",
+        "terminus-font"
+    ],
+    "parallel downloads": 5,
+    "profile_config": null,
+    "save_config": null,
+    "script": "guided",
+    "silent": false,
+    "timezone": "America/Los_Angeles",
+    "version": "2.6.0",
+    "custom-commands": [
+        "systemctl enable sddm",
+        "systemctl enable NetworkManager",
+        "systemctl enable libvirtd",
+        "systemctl enable docker",
+        "systemctl enable sshd",
+        "systemctl enable bluetooth",
+        "systemctl enable cups",
+        "systemctl enable cronie",
+        "usermod -aG libvirt,kvm,docker,wheel kang",
+        "chmod +x /usr/local/bin/system-update",
+        "chmod +x /usr/local/bin/first-login-setup",
+        "chmod +x /etc/profile.d/force-password-change.sh",
+        "chage -d 0 kang",
+        "sed -i 's/^#%wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers"
+    ],
+    "users": [
+        {
+            "username": "kang",
+            "password": "changeme123",
+            "sudo": true
+        }
+    ]
+}

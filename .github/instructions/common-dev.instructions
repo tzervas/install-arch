@@ -1,0 +1,153 @@
+# Common Development Instructions for Install-Arch Project
+
+## Path-Specific Instructions
+
+### configs/archinstall-config.json
+**Purpose**: Main archinstall configuration for automated Arch Linux installation
+**Instructions**:
+- Always validate JSON syntax before committing
+- Test configurations on virtual hardware first
+- Document hardware-specific customizations in comments
+- Ensure package list includes all virtualization dependencies
+- Verify partition sizes fit target hardware (2TB NVMe default)
+- Update config_version when archinstall changes
+- Include hardware abstraction variables for CPU/GPU variants
+
+### configs/hardware-emulation.yaml
+**Purpose**: Phased virtualization hardware configurations
+**Instructions**:
+- Maintain three-phase approach: no-GPU → emulated → production
+- Document all hardware assumptions and requirements
+- Include validation commands for each phase
+- Support multiple CPU architectures (Intel 14700K, E5-2665 v4)
+- Abstract GPU configurations with variables
+- Test mock GPU configurations before real hardware
+- Update compatibility notes for new hardware
+
+### configs/post-install.sh
+**Purpose**: Post-installation system configuration script
+**Instructions**:
+- Test all commands in chroot environment first
+- Ensure read-only root compatibility
+- Include error handling for all operations
+- Document hardware-specific configurations
+- Validate IOMMU and VFIO setup commands
+- Create comprehensive system documentation
+- Support hardware abstraction through variables
+
+### configs/system-update
+**Purpose**: Safe system update script for read-only root
+**Instructions**:
+- Always remount filesystem appropriately
+- Include rollback mechanisms
+- Test update process thoroughly
+- Handle package conflicts gracefully
+- Maintain system stability during updates
+- Document update procedures clearly
+- Support Arch release update automation
+
+### configs/config.yaml
+**Purpose**: Hardware and network configuration parameters
+**Instructions**:
+- Use variables for hardware abstraction
+- Document all configuration options
+- Validate network configurations
+- Include security settings documentation
+- Support multiple deployment scenarios
+- Update for new hardware requirements
+- Maintain backward compatibility
+
+### prepare-usb.sh
+**Purpose**: Automated USB drive preparation script
+**Instructions**:
+- Include safety checks and warnings
+- Validate ISO integrity before writing
+- Test on multiple USB drive sizes
+- Document hardware requirements
+- Include cleanup procedures
+- Support different ISO versions
+- Verify all copied files
+
+### .github/agents/*.agent
+**Purpose**: GitHub Copilot agent configurations
+**Instructions**:
+- Follow YAML frontmatter format strictly
+- Include handoff triggers and constraints
+- Focus on PCIe passthrough, BTRFS, Arch updates
+- Support hardware abstraction
+- Document tool usage clearly
+- Test agent interactions
+- Maintain security best practices
+
+### .github/prompts/common-dev.prompts
+**Purpose**: Reusable development prompts
+**Instructions**:
+- Use variables for hardware abstraction
+- Include validation steps
+- Document troubleshooting procedures
+- Support multiple CPU/GPU combinations
+- Keep prompts focused and actionable
+- Update for new Arch features
+- Test all prompt scenarios
+
+### .github/instructions/common-dev.instructions
+**Purpose**: Development workflow guidelines
+**Instructions**:
+- Keep instructions path-specific
+- Include reliability considerations
+- Document hardware abstraction patterns
+- Update for project evolution
+- Maintain consistency across files
+- Include testing requirements
+- Support collaborative development
+
+## General Development Guidelines
+
+### Hardware Abstraction
+- Use variables for CPU_MODEL, GPU_MODEL, PCI_IDS
+- Support Intel 14700K/RTX5080 and E5-2665 v4 configurations
+- Document hardware requirements clearly
+- Test abstractions on virtual hardware
+- Include fallback configurations
+
+### Reliability Focus
+- Test all changes on read-only root systems
+- Validate BTRFS snapshot functionality
+- Ensure PCIe passthrough stability
+- Include error recovery mechanisms
+- Document failure modes and solutions
+
+### Security Considerations
+- Never commit real encryption keys
+- Use placeholder values in configurations
+- Validate access control settings
+- Include security hardening steps
+- Document security implications
+
+### Testing Requirements
+- Test installations on target hardware
+- Validate virtualization functionality
+- Check system update procedures
+- Verify hardware abstraction
+- Document test results
+
+### Documentation Standards
+- Update .github/index.md for new components
+- Maintain .github/glossary.md accuracy
+- Include inline comments in scripts
+- Document configuration options
+- Create troubleshooting guides
+
+### Version Control
+- Use descriptive commit messages
+- Create feature branches for changes
+- Test changes before merging
+- Maintain changelog for releases
+- Tag important milestones
+
+### Collaboration
+- Use GitHub Copilot agents for assistance
+- Follow established handoff procedures
+- Document design decisions
+- Include code review requirements
+- Maintain project consistency

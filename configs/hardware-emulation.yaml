@@ -1,0 +1,265 @@
+# Hardware Emulation Configuration for E5-2665-v4 Server
+# Phased approach: no-dGPU basics → dGPU emulation → desktop RTX5080 deploy
+# Target: /data volume on 192.168.1.170
+
+# Phase 1: No-dGPU Baseline (Current - Reliable DHCP/VM foundation)
+phase1_no_dgpu:
+  description: "Establish reliable VM provisioning without GPU dependencies"
+  hardware:
+    cpu: "E5-2665 v4"  # 8-core/16-thread Broadwell
+    cores_physical: 8
+    threads_total: 16
+    iommu_available: true
+    iommu_groups_verified: false  # Run scripts/check_iommu.sh
+    memory_gb: 64  # Typical dual-socket config
+    storage: "/data on Btrfs-LUKS"
+    gpu_mode: "disabled"
+    virtualization: "KVM with libvirt"
+  
+  vm_config:
+    vcpu: 4  # Conservative for multi-VM testing
+    memory_mb: 8192
+    disk_gb: 80
+    network_mode: "bridge"  # br0 with DHCP
+    bridge_interface: "br0"
+    qemu_machine: "q35"
+    cpu_mode: "host-passthrough"
+    features:
+      - "kvm"
+      - "vmx"  # Nested virt for testing
+      - "hyperv"  # Windows guest opts
+  
+  validation_targets:
+    - "VM boots with DHCP lease on br0"
+    - "SSH connectivity within 60s"
+    - "Cloud-init completes successfully"
+    - "No GPU driver errors in dmesg"
+    - "Snapshot/rollback via Btrfs"
+
+# Phase 2: dGPU Emulation (Compatibility validation without hardware)
+phase2_dgpu_emulation:
+  description: "Simulate GPU passthrough for IOMMU/VFIO compatibility testing"
+  hardware:
+    cpu: "E5-2665 v4"
+    iommu_mode: "intel_iommu=on iommu=pt"
+    vfio_modules:
+      - "vfio"
+      - "vfio_iommu_type1"
+      - "vfio_pci"
+    emulated_gpu:
+      vendor_id: "0x10de"  # NVIDIA
+      device_id: "0x2684"  # RTX 4090 (similar arch to 5080)
+      subsystem_vendor: "0x10de"
+      subsystem_device: "0x1234"
+      bus_address: "0000:01:00.0"  # Placeholder PCI slot
+      iommu_group: 13  # Example - verify with lspci
+    mock_mode: true  # Software emulation, no real GPU
+  
+  vm_config:
+    vcpu: 8
+    memory_mb: 16384
+    disk_gb: 120
+    qemu_machine: "q35"
+    cpu_mode: "host-passthrough"
+    cpu_pinning:
+      enabled: true
+      cores: [0, 1, 2, 3, 4, 5, 6, 7]  # First 8 threads
+    hugepages:
+      enabled: true
+      size_mb: 2
+      count: 8192  # 16GB worth
+    hostdev:
+      type: "pci"
+      managed: "yes"
+      driver: "vfio"
+      rom_bar: "off"
+      multifunction: "on"
+    vfio_options:
+      ids: "10de:2684"  # Bind mock device
+      disable_vga: true
+      disable_idle_d3: false
+  
+  libvirt_xml_snippets:
+    features: |
+      <features>
+        <acpi/>
+        <apic/>
+        <hyperv mode='custom'>
+          <relaxed state='on'/>
+          <vapic state='on'/>
+          <spinlocks state='on' retries='8191'/>
+          <vendor_id state='on' value='1234567890ab'/>
+          <hidden state='on'/>
+        </hyperv>
+        <kvm>
+          <hidden state='on'/>
+        </kvm>
+        <vmport state='off'/>
+        <ioapic driver='kvm'/>
+      </features>
+    
+    pci_hostdev: |
+      <hostdev mode='subsystem' type='pci' managed='yes'>
+        <driver name='vfio'/>
+        <source>
+          <address domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>
+        </source>
+        <rom bar='off'/>
+        <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0' multifunction='on'/>
+      </hostdev>
+  
+  validation_targets:
+    - "IOMMU groups enumerated correctly"
+    - "vfio-pci module binds to mock device"
+    - "VM starts with hostdev XML"
+    - "No AER errors in host dmesg"
+    - "Guest sees PCI device (lspci)"
+    - "NVIDIA driver installs in guest (mock failure OK)"
+
+# Phase 3: Desktop RTX5080 Target (Future production config)
+phase3_desktop_production:
+  description: "Real GPU passthrough on i7-14700K/RTX5080 desktop"
+  hardware:
+    cpu: "i7-14700K"
+    cores_physical: 20  # 8P+12E
+    threads_total: 28
+    iommu_available: true
+    memory_gb: 64
+    storage: "/data on Btrfs-LUKS + NVMe"
+    gpu_primary: "RTX 5080"
+    gpu_pci_slot: "TBD"  # Discover with lspci after install
+    iommu_group: "TBD"
+    bridge_interface: "enp3s0"  # From config.yaml
+  
+  vm_config:
+    vcpu: 16
+    memory_mb: 32768
+    disk_gb: 120
+    cpu_mode: "host-passthrough"
+    cpu_pinning:
+      enabled: true
+      cores: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    hugepages:
+      enabled: true
+      size_mb: 1024  # 1GB pages
+      count: 32
+    gpu_passthrough:
+      enabled: true
+      vendor_id: "0x10de"
+      device_id: "TBD"  # RTX 5080 device ID
+      vbios_override: false
+      audio_passthrough: true  # HDMI audio function
+  
+  validation_targets:
+    - "Single GPU passthrough with host headless"
+    - "NVIDIA driver 580+ in guest"
+    - "CUDA/Vulkan functional"
+    - "Steam games launch successfully"
+    - "vLLM inference post-gaming swap"
+
+# Network Configuration (Common across phases)
+network:
+  bridge_name: "br0"
+  dhcp_server: "router at 192.168.1.1"
+  ip_range: "192.168.1.0/24"
+  server_ip: "192.168.1.170"
+  vm_mac_prefix: "52:54:00"  # Standard libvirt range
+  vm_interface_name: "ens3"
+  dhcp_timeout_seconds: 60
+  retry_strategy:
+    max_attempts: 3
+    backoff_seconds: 10
+
+# Storage Configuration (Common across phases)
+storage:
+  pool_name: "default"
+  pool_path: "/data/vms"
+  format: "qcow2"
+  cache_mode: "writeback"  # Performance for /data
+  io_mode: "native"
+  discard: "unmap"
+  subvolume_layout:
+    enabled: true
+    paths:
+      - "/data/vms"
+      - "/data/models"
+      - "/data/dev"
+      - "/data/backups"
+  snapshot_strategy:
+    tool: "snapper"
+    frequency: "pre-post"
+    retention_count: 10
+
+# Testing Matrix (Phased validation)
+testing:
+  phase1_suite:
+    - name: "basic_vm_boot"
+      timeout_seconds: 180
+      required: true
+    - name: "dhcp_lease_acquisition"
+      timeout_seconds: 60
+      required: true
+    - name: "ssh_connectivity"
+      timeout_seconds: 90
+      required: true
+    - name: "cloudinit_completion"
+      timeout_seconds: 300
+      required: true
+  
+  phase2_suite:
+    - name: "iommu_enumeration"
+      command: "scripts/check_iommu.sh"
+      required: true
+    - name: "vfio_binding"
+      command: "lsmod | grep vfio"
+      required: true
+    - name: "mock_gpu_detection"
+      command: "lspci | grep NVIDIA"
+      required: false  # Mock may not show
+    - name: "hostdev_xml_validation"
+      command: "virsh dumpxml blackwell-test | grep hostdev"
+      required: true
+  
+  phase3_suite:
+    - name: "real_gpu_passthrough"
+      timeout_seconds: 300
+      required: true
+    - name: "nvidia_driver_load"
+      command: "nvidia-smi"
+      required: true
+    - name: "steam_launch"
+      timeout_seconds: 600
+      required: false
+    - name: "vllm_inference"
+      command: "curl http://localhost:8000/v1/models"
+      required: false
+
+# Compatibility Notes
+compatibility:
+  e5_2665v4_notes:
+    - "Broadwell microarch supports VT-x, VT-d, EPT"
+    - "IOMMU may need BIOS enable + kernel params"
+    - "No integrated GPU - host must be headless or via BMC"
+    - "PCIe 3.0 limits GPU bandwidth vs. desktop PCIe 5.0"
+    - "Mock GPU testing hedge for desktop compatibility"
+  
+  known_issues:
+    - "libvirt DHCP timing on br0 - fixed via cloud-init netplan"
+    - "VFIO bind conflicts with nouveau - blacklist required"
+    - "AER errors on some GPUs - add pcie_acs_override if needed"
+    - "Windows guests need virtio drivers ISO mounted"
+  
+  risk_mitigations:
+    - "Phase 1 establishes DHCP/network baseline"
+    - "Phase 2 emulation validates XML/VFIO without hardware"
+    - "Snapper snapshots enable /data rollback"
+    - "test_mode flag prevents accidental production changes"
+
+# References
+references:
+  - "docs/complete_deployment_guide.md - Guest VM Setup"
+  - "tasking/context/vm_manager.md - Terraform scope"
+  - "infra/terraform/main.tf - Current implementation"
+  - "configs/config.yaml - Hardware/network params"
+  - "https://wiki.archlinux.org/title/PCI_passthrough_via_OVMF"
+  - "https://github.com/ilayna/Single-GPU-Passthrough"

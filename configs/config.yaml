@@ -1,0 +1,112 @@
+target:
+  ip: 192.168.1.170
+  user: adminuser
+  password: temporarypassword
+  ssh_port: 22
+  password_is_placeholder: true
+distro: ubuntu
+hardware:
+  cpu: i7-14700K
+  gpu: rtx5080
+  nvme: /dev/nvme0n1
+  gpu_enabled: false
+  bridge_interface: enp3s0
+nvidia:
+  driver_version: 580.119.02
+  driver_package: nvidia-driver-550-open
+vllm:
+  models:
+  - name: llama3-8b
+    port: 8000
+  - name: mistral-7b
+    port: 8001
+  - name: codestral-22b
+    port: 8002
+  gpu_memory_utilization: 0.95
+vm_defaults:
+  memory_mb: 32768
+  vcpu: 16
+  disk_gb: 120
+  test_disk_gb: 80
+  pin_p_cores:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  - 10
+  - 11
+  - 12
+  - 13
+  - 14
+  - 15
+test_mode: true
+log_level: debug
+log_file: logs/enriched_logs.jsonl
+backup:
+  enabled: false
+  schedule: daily
+  log_dir: /var/log/blackwell-backup
+  local_snapshot_dir: /.snapshots/blackwell-send
+  source_subvolumes:
+  - /
+  - /home
+  - /data
+  remote:
+    host: backup.local
+    user: backup
+    port: 22
+    root_path: /srv/backup/btrfs
+data_layout:
+  enabled: false
+  path: /data
+  directories:
+  - dev
+  - vms
+  - models
+  - media
+  - backups
+  - shared
+  migrate:
+    enabled: false
+    user_project_paths:
+    - ~/Projects
+    - ~/projects
+    - ~/Documents/projects
+    dest_subdir: dev
+security:
+  allow_unverified_downloads: false
+  max_log_field_bytes: 8192
+  screen_non_printable: true
+artifacts:
+  ubuntu_iso:
+    url: https://releases.ubuntu.com/24.04.1/ubuntu-24.04.1-live-server-amd64.iso
+    sha256: e240e4b801f7bb68c20d1356b60968ad0c33a41d00d828e74ceb3364a0317be9
+  nvidia_driver:
+    url: https://us.download.nvidia.com/XFree86/Linux-x86_64/570.86.16/NVIDIA-Linux-x86_64-570.86.16.run
+    sha256: 4563ea4bb654247f491005a57c72c676aacd95abe1691d71332cecf25261cbd5
+  debian12_iso:
+    url: https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.7.0-amd64-netinst.iso
+    sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+desktop:
+  enabled: false
+  flavor: kde
+  display_manager: sddm
+  session: x11
+  ricing:
+    enabled: false
+    install_extras: true
+steam:
+  enabled: false
+  install_steamcmd: true
+  enable_i386: true
+  install_protontricks: true
+  install_gamemode: true
+  install_mangohud: true
+  install_vkbasalt: false
+  install_protonup_qt: true

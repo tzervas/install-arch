@@ -1,0 +1,13 @@
+# Central domain mapping for GitOps/O11y stack
+base_domain: vectorweight.com
+wildcard: "*.vectorweight.com"
+services:
+  gitlab: gitlab.vectorweight.com
+  grafana: grafana.vectorweight.com
+  prometheus: prom.vectorweight.com
+  alertmanager: alerts.vectorweight.com
+  loki: loki.vectorweight.com
+  tempo: tempo.vectorweight.com
+  argocd: argocd.vectorweight.com
+  landing: home.vectorweight.com
+  sso: sso.vectorweight.com  # if using external IdP like Keycloak; otherwise GitLab as IdP

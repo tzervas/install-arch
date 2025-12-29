@@ -1,0 +1,39 @@
+#cloud-config
+hostname: blackwell-station
+manage_etc_hosts: true
+timezone: Etc/UTC
+
+users:
+  - name: kang
+    gecos: Kang
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: sudo, docker, kvm, libvirt
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ${jsonencode(ssh_authorized_key)}
+
+package_update: true
+package_upgrade: true
+packages:
+  - qemu-guest-agent
+  - docker.io
+  - uidmap
+  - dbus-user-session
+  - fuse-overlayfs
+  - slirp4netns
+
+write_files:
+  - path: /etc/default/grub.d/blackwell.cfg
+    permissions: '0644'
+    owner: root:root
+    content: |
+      GRUB_CMDLINE_LINUX_DEFAULT="$GRUB_CMDLINE_LINUX_DEFAULT intel_iommu=on iommu=pt video=efifb:off"
+
+runcmd:
+  - systemctl enable --now qemu-guest-agent
+  - usermod --add-subuids 100000-165535 --add-subgids 100000-165535 kang
+  - loginctl enable-linger kang
+  - systemctl disable --now docker || true
+  - dockerd-rootless-setuptool.sh install -f -s
+  - apt-get clean

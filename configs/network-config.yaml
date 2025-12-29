@@ -1,0 +1,12 @@
+version: 2
+renderer: networkd
+ethernets:
+  primary:
+    match:
+      macaddress: "${vm_mac_address}"
+    set-name: "${vm_interface_name}"
+    dhcp4: true
+    dhcp6: false
+    optional: true
+    link-local: []
+    dhcp-identifier: mac

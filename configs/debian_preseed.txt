@@ -1,0 +1,132 @@
+#### Debian 13 "Trixie" Preseed Configuration
+#### Target: i7-14700K + RTX 5080 + 2TB NVMe
+
+### Localization
+d-i debian-installer/locale string en_US.UTF-8
+d-i keyboard-configuration/xkb-keymap select us
+d-i keyboard-configuration/toggle select No toggling
+
+### Network configuration
+d-i netcfg/choose_interface select auto
+d-i netcfg/get_hostname string blackwell-station
+d-i netcfg/get_domain string local
+d-i netcfg/wireless_wep string
+
+### Mirror settings
+d-i mirror/country string manual
+d-i mirror/http/hostname string deb.debian.org
+d-i mirror/http/directory string /debian
+d-i mirror/http/proxy string
+d-i mirror/suite string trixie
+
+### Account setup
+d-i passwd/root-login boolean false
+d-i passwd/user-fullname string System Administrator
+d-i passwd/username string adminuser
+# Generate with: mkpasswd -m sha-512
+d-i passwd/user-password-crypted password $6$rounds=4096$saltedhash$yourhashhere
+
+### Clock and time zone
+d-i clock-setup/utc boolean true
+d-i time/zone string US/Eastern
+d-i clock-setup/ntp boolean true
+d-i clock-setup/ntp-server string pool.ntp.org
+
+### Partitioning: Separate /boot + LUKS2 + Btrfs
+# Use expert recipe for precise control
+d-i partman-auto/disk string /dev/nvme0n1
+d-i partman-auto/method string crypto
+d-i partman-lvm/device_remove_lvm boolean true
+d-i partman-md/device_remove_md boolean true
+d-i partman-lvm/confirm boolean true
+d-i partman-lvm/confirm_nooverwrite boolean true
+
+# Custom partitioning recipe
+d-i partman-auto/expert_recipe string                         \
+      boot-crypto ::                                          \
+              1024 1024 1024 fat32                            \
+                      $primary{ }                             \
+                      method{ efi }                           \
+                      format{ }                               \
+              .                                               \
+              2048 2048 2048 ext4                             \
+                      $primary{ }                             \
+                      method{ format } format{ }              \
+                      use_filesystem{ } filesystem{ ext4 }    \
+                      mountpoint{ /boot }                     \
+              .                                               \
+              1000 10000 1000000000 btrfs                     \
+                      $primary{ }                             \
+                      method{ crypto } format{ }              \
+              .
+
+# LUKS settings
+d-i partman-crypto/passphrase password temporarypassword
+d-i partman-crypto/passphrase-again password temporarypassword
+d-i partman-crypto/weak_passphrase boolean true
+
+# Force Btrfs for encrypted partition
+d-i partman/default_filesystem string btrfs
+
+# Confirm partitioning
+d-i partman-partitioning/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+
+### Base system installation
+d-i base-installer/kernel/image string linux-image-amd64
+
+### Package selection
+tasksel tasksel/first multiselect standard, ssh-server
+
+# Additional packages
+d-i pkgsel/include string \
+    build-essential \
+    linux-headers-amd64 \
+    firmware-linux-nonfree \
+    btrfs-progs \
+    snapper \
+    git \
+    curl \
+    wget \
+    vim \
+    htop \
+    sudo \
+    qemu-system-x86 \
+    libvirt-daemon-system \
+    libvirt-clients \
+    virtinst \
+    virt-manager \
+    ovmf \
+    bridge-utils \
+    docker.io \
+    python3 \
+    python3-pip
+
+d-i pkgsel/upgrade select full-upgrade
+
+# Popularity contest
+popularity-contest popularity-contest/participate boolean false
+
+### Boot loader installation
+d-i grub-installer/only_debian boolean true
+d-i grub-installer/with_other_os boolean true
+d-i grub-installer/bootdev string /dev/nvme0n1
+
+### Finishing up
+d-i finish-install/reboot_in_progress note
+
+### Late Command: System Configuration
+d-i preseed/late_command string \
+    in-target sh -c 'echo "blackwell-station" > /etc/hostname'; \
+    in-target usermod -aG sudo,kvm,libvirt,docker adminuser; \
+    in-target sed -i "s/GRUB_CMDLINE_LINUX_DEFAULT=\"[^\"]*/& intel_iommu=on iommu=pt video=efifb:off/" /etc/default/grub; \
+    in-target sh -c 'echo "blacklist nouveau" > /etc/modprobe.d/blacklist-nouveau.conf'; \
+    in-target sh -c 'echo "options nouveau modeset=0" >> /etc/modprobe.d/blacklist-nouveau.conf'; \
+    in-target sh -c 'echo "vfio-pci" >> /etc/modules'; \
+    in-target sh -c 'echo "options vfio-pci ids=" >> /etc/modprobe.d/vfio.conf'; \
+    in-target update-initramfs -u -k all; \
+    in-target update-grub; \
+    in-target touch /root/.needs-post-install; \
+    in-target sh -c 'echo "Installation complete. Run post-install script after reboot." > /etc/motd';
