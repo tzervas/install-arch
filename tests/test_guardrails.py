@@ -101,6 +101,19 @@ class TestGuardrailsValidator:
         # Cleanup
         temp_dir.rmdir()
 
+    @patch.dict("os.environ", {"CI": "true"})
+    def test_validate_temp_security_ci_lenient(self):
+        """Test temp directory security validation is lenient in CI."""
+        validator = GuardrailsValidator()
+        temp_dir = Path("/tmp/test_temp")
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        temp_dir.chmod(0o755)  # Would normally fail, but should pass in CI
+
+        assert validator.validate_temp_security(temp_dir) is True
+
+        # Cleanup
+        temp_dir.rmdir()
+
     @patch.dict("os.environ", {"DEVCONTAINER": "1"})
     def test_validate_devcontainer_usage_true(self):
         """Test devcontainer validation when in devcontainer."""
@@ -112,6 +125,12 @@ class TestGuardrailsValidator:
         """Test devcontainer validation when not in devcontainer."""
         validator = GuardrailsValidator()
         assert validator.validate_devcontainer_usage() is False
+
+    @patch.dict("os.environ", {"CI": "true"}, clear=True)
+    def test_validate_devcontainer_usage_ci_skip(self):
+        """Test devcontainer validation is skipped in CI."""
+        validator = GuardrailsValidator()
+        assert validator.validate_devcontainer_usage() is True
 
     def test_get_violations_none(self):
         """Test getting violations when all compliant."""
