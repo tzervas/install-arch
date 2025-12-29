@@ -12,7 +12,8 @@ class GuardrailsValidator:
 
     def __init__(self, guardrails_path: Optional[Path] = None):
         if guardrails_path is None:
-            guardrails_path = Path(__file__).parent / "package-baseline.toml"
+            # Load from the comprehensive .github guardrails specification
+            guardrails_path = Path(__file__).parent.parent.parent / ".github" / "guardrails" / "package-baseline.toml"
 
         self.guardrails_path = guardrails_path
         self._config: Dict[str, Any] = {}
@@ -83,47 +84,100 @@ class GuardrailsValidator:
 
         return any(os.getenv(var) for var in devcontainer_vars)
 
+    def validate_filesystem_operations(self) -> bool:
+        """Validate that filesystem operations follow git-preferred rules."""
+        # For now, just check if git is available (since git operations are preferred)
+        # Could be extended to check if operations use git commands
+        return self.validate_git_operations()
+
+    def validate_baseline_requirements(self) -> Dict[str, bool]:
+        """Validate baseline requirements from the comprehensive config."""
+        baseline = self._config.get("baseline_requirements", {})
+        results = {}
+
+        # Check python package management
+        if baseline.get("python_package_management") == "configured_tool":
+            from .config import DevConfig
+            config = DevConfig()
+            results["python_package_management"] = self.validate_package_manager(config.package_manager)
+
+        # Check venv management
+        if baseline.get("venv_management") == "tool_managed":
+            from .config import DevConfig
+            config = DevConfig()
+            venv_path = Path(config.venv_path)
+            results["venv_management"] = self.validate_venv_creation(config.package_manager, venv_path)
+
+        # Check filesystem operations
+        if baseline.get("filesystem_operations") == "git_preferred":
+            results["filesystem_operations"] = self.validate_filesystem_operations()
+
+        # Check temporary files
+        if baseline.get("temporary_files") == "secure_mktemp":
+            from .config import DevConfig
+            config = DevConfig()
+            temp_base = Path(config.tmp_base_dir)
+            if temp_base.exists():
+                results["temporary_files"] = self.validate_temp_security(temp_base)
+            else:
+                results["temporary_files"] = True
+
+        # Check development environment
+        if baseline.get("development_environment") == "devcontainer_isolated":
+            results["development_environment"] = self.validate_devcontainer_usage()
+
+        return results
+
     def check_compliance(self) -> Dict[str, bool]:
-        """Run all compliance checks."""
+        """Run all compliance checks based on the comprehensive baseline."""
         from .config import DevConfig
 
         config = DevConfig()
 
         results = {}
 
-        # Check package manager
-        results["package_manager_supported"] = self.validate_package_manager(
-            config.package_manager
-        )
+        compliance_checks = self._config.get("compliance_checks", {})
 
-        # Check venv
-        venv_path = Path(config.venv_path)
-        results["venv_properly_created"] = self.validate_venv_creation(
-            config.package_manager, venv_path
-        )
-
-        # Check git operations
-        results["git_operations_available"] = self.validate_git_operations()
-
-        # Check temp security
-        temp_base = Path(config.tmp_base_dir)
-        if temp_base.exists():
-            results["temp_security_compliant"] = self.validate_temp_security(
-                temp_base
+        # Check package manager if enabled
+        if compliance_checks.get("check_package_manager", True):
+            results["package_manager_supported"] = self.validate_package_manager(
+                config.package_manager
             )
-        else:
-            results["temp_security_compliant"] = True  # Not created yet
 
-        # Check devcontainer usage
-        results["devcontainer_usage"] = self.validate_devcontainer_usage()
+        # Check venv if enabled
+        if compliance_checks.get("check_venv_isolation", True):
+            venv_path = Path(config.venv_path)
+            results["venv_properly_created"] = self.validate_venv_creation(
+                config.package_manager, venv_path
+            )
+
+        # Check git operations if enabled
+        if compliance_checks.get("check_git_operations", True):
+            results["git_operations_available"] = self.validate_git_operations()
+
+        # Check temp security if enabled
+        if compliance_checks.get("check_temp_security", True):
+            temp_base = Path(config.tmp_base_dir)
+            if temp_base.exists():
+                results["temp_security_compliant"] = self.validate_temp_security(
+                    temp_base
+                )
+            else:
+                results["temp_security_compliant"] = True  # Not created yet
+
+        # Check devcontainer usage if enabled
+        if compliance_checks.get("validate_devcontainer_usage", True):
+            results["devcontainer_usage"] = self.validate_devcontainer_usage()
 
         return results
 
     def get_violations(self) -> List[str]:
         """Get list of compliance violations."""
         compliance = self.check_compliance()
+        baseline = self.validate_baseline_requirements()
         violations = []
 
+        # Standard compliance checks
         if not compliance.get("package_manager_supported", True):
             violations.append("Package manager not supported by guardrails")
 
@@ -140,6 +194,22 @@ class GuardrailsValidator:
             violations.append(
                 "Work not being done in devcontainer (when required)"
             )
+
+        # Baseline requirement checks
+        if not baseline.get("python_package_management", True):
+            violations.append("Python package management not using configured tool")
+
+        if not baseline.get("venv_management", True):
+            violations.append("Virtual environment not tool-managed")
+
+        if not baseline.get("filesystem_operations", True):
+            violations.append("Filesystem operations not following git-preferred rules")
+
+        if not baseline.get("temporary_files", True):
+            violations.append("Temporary files not created securely")
+
+        if not baseline.get("development_environment", True):
+            violations.append("Development not isolated in devcontainer")
 
         return violations
 

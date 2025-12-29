@@ -18,54 +18,45 @@ temporary_files = "secure_mktemp"
 # Development work requiring additional packages must use devcontainer
 development_environment = "devcontainer_isolated"
 
-[tool_configuration]
-# Supported package managers with their configurations
-uv = {
-    install_method = "curl_script",
-    venv_command = "uv venv",
-    install_command = "uv pip install",
-    dev_flag = "--dev"
-}
+[tool_configuration.uv]
+install_method = "curl_script"
+venv_command = "uv venv"
+install_command = "uv pip install"
+dev_flag = "--dev"
 
-pip = {
-    venv_command = "python -m venv",
-    install_command = "pip install",
-    dev_handling = "requirements_files"
-}
+[tool_configuration.pip]
+venv_command = "python -m venv"
+install_command = "pip install"
+dev_handling = "requirements_files"
 
-poetry = {
-    venv_command = "poetry env use",
-    install_command = "poetry install",
-    dev_flag = "--with=dev"
-}
+[tool_configuration.poetry]
+venv_command = "poetry env use"
+install_command = "poetry install"
+dev_flag = "--with=dev"
 
-pipenv = {
-    venv_command = "pipenv --python",
-    install_command = "pipenv install",
-    dev_flag = "--dev"
-}
+[tool_configuration.pipenv]
+venv_command = "pipenv --python"
+install_command = "pipenv install"
+dev_flag = "--dev"
 
 [filesystem_rules]
 # Git operations are preferred for tracked files
 git_operations = ["mv", "rm", "add", "commit"]
 
 # Secure temporary directory creation
-temp_security = {
-    use_mktemp = true,
-    restrictive_permissions = true,
-    base_directory = "/tmp/install-arch-dev"
-}
+[filesystem_rules.temp_security]
+use_mktemp = true
+restrictive_permissions = true
+base_directory = "/tmp/install-arch-dev"
 
 # File organization rules
-temp_structure = {
-    agent_files = "tmp/agents/",
-    build_artifacts = "tmp/build/",
-    test_data = "tmp/tests/",
-    logs = "tmp/logs/"
-}
+[filesystem_rules.temp_structure]
+agent_files = "tmp/agents/"
+build_artifacts = "tmp/build/"
+test_data = "tmp/tests/"
+logs = "tmp/logs/"
 
 [devcontainer_requirements]
-# Devcontainer must be used for any work requiring additional packages
 isolation_level = "full"
 base_image = "ubuntu"
 features = ["python", "git", "github-cli"]

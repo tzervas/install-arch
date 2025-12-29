@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Install dependencies
+      run: uv sync --dev
+
+    - name: Run guardrails check
+      run: uv run python -m install_arch.cli enforce-guardrails
+
+    - name: Run tests
+      run: uv run pytest tests/ -v --cov=src/install_arch --cov-report=xml
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+
+    - name: Run linting
+      run: |
+        uv run flake8 src/ tests/
+        uv run mypy src/install_arch/
+        uv run black --check src/ tests/
+        uv run isort --check-only src/ tests/
