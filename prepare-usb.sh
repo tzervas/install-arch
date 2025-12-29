@@ -219,7 +219,7 @@ mkdir -p "$CONFIG_USB_DIR"
 # Copy configuration files
 echo -e "${YELLOW}Copying configuration files...${NC}"
 for file in "$CONFIG_DIR"/*; do
-    if [[ "$(basename "$file")" != "debian_preseed.txt" ]]; then
+    if [[ -f "$file" && "$(basename "$file")" != "debian_preseed.txt" ]]; then
         cp -v "$file" "$CONFIG_USB_DIR"/
     fi
 done
