@@ -85,9 +85,9 @@ class GuardrailsValidator:
 
     def check_compliance(self) -> Dict[str, bool]:
         """Run all compliance checks."""
-        from ..config import DevConfig
-        from ..package_manager import PackageManager
-        from ..filesystem import FileSystemOps
+        from .config import DevConfig
+        from .package_manager import PackageManager
+        from .filesystem import FileSystemOps
 
         config = DevConfig()
         pkg_mgr = PackageManager(config)
