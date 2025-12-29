@@ -1,15 +1,14 @@
 """Configuration management for development environment."""
 
-import os
 import tomllib
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 
 class DevConfig:
     """Development environment configuration manager."""
 
-    def __init__(self, config_path: Path = None):
+    def __init__(self, config_path: Optional[Path] = None):
         if config_path is None:
             config_path = Path(__file__).parent.parent.parent / "dev-config.toml"
 
@@ -25,13 +24,13 @@ class DevConfig:
                 "package_manager": {
                     "tool": "uv",
                     "venv_path": ".venv",
-                    "python_version": "3.11"
+                    "python_version": "3.11",
                 },
                 "filesystem": {
                     "use_git_ops": True,
                     "tmp_base_dir": "/tmp/install-arch-dev",
-                    "use_secure_tmp": True
-                }
+                    "use_secure_tmp": True,
+                },
             }
 
     @property
@@ -57,7 +56,9 @@ class DevConfig:
     @property
     def tmp_base_dir(self) -> str:
         """Get the base directory for temporary files."""
-        return self._config.get("filesystem", {}).get("tmp_base_dir", "/tmp/install-arch-dev")
+        return self._config.get("filesystem", {}).get(
+            "tmp_base_dir", "/tmp/install-arch-dev"
+        )
 
     @property
     def use_secure_tmp(self) -> bool:

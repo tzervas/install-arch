@@ -12,19 +12,17 @@ from .config import DevConfig
 class PackageManager:
     """Unified interface for different Python package managers."""
 
-    def __init__(self, config: DevConfig = None):
+    def __init__(self, config: Optional[DevConfig] = None):
         self.config = config or DevConfig()
         self.tool = self.config.package_manager
 
-    def _run_command(self, cmd: List[str], cwd: Path = None) -> subprocess.CompletedProcess:
+    def _run_command(
+        self, cmd: List[str], cwd: Optional[Path] = None
+    ) -> subprocess.CompletedProcess:
         """Run a command and return the result."""
         try:
             return subprocess.run(
-                cmd,
-                cwd=cwd or Path.cwd(),
-                capture_output=True,
-                text=True,
-                check=True
+                cmd, cwd=cwd or Path.cwd(), capture_output=True, text=True, check=True
             )
         except subprocess.CalledProcessError as e:
             print(f"Command failed: {' '.join(cmd)}")
@@ -75,7 +73,7 @@ class PackageManager:
         install_script = "curl -sSL https://install.python-poetry.org | python3 -"
         self._run_command(["bash", "-c", install_script])
 
-    def create_venv(self, path: Path = None) -> Path:
+    def create_venv(self, path: Optional[Path] = None) -> Path:
         """Create a virtual environment."""
         venv_path = path or Path(self.config.venv_path)
 

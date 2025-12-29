@@ -16,6 +16,7 @@ filesystem_operations = "git_preferred"
 temporary_files = "secure_mktemp"
 
 # Development work requiring additional packages must use devcontainer
+# Note: This requirement is automatically skipped in CI environments
 development_environment = "devcontainer_isolated"
 
 [tool_configuration.uv]

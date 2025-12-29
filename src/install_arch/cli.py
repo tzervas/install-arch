@@ -1,18 +1,25 @@
 """Command-line interface for development environment management."""
 
+import shutil
+import subprocess
 import sys
-import click
 from pathlib import Path
+
+import click
 
 from .config import DevConfig
 from .filesystem import FileSystemOps
-from .package_manager import PackageManager
 from .guardrails import GuardrailsValidator
+from .package_manager import PackageManager
 
 
 @click.group()
-@click.option('--config', 'config_path', type=click.Path(exists=True),
-              help='Path to dev-config.toml')
+@click.option(
+    "--config",
+    "config_path",
+    type=click.Path(exists=True),
+    help="Path to dev-config.toml",
+)
 @click.pass_context
 def cli(ctx, config_path):
     """Install Arch development environment manager."""
@@ -21,19 +28,19 @@ def cli(ctx, config_path):
     pkg_mgr = PackageManager(config)
 
     ctx.ensure_object(dict)
-    ctx.obj['config'] = config
-    ctx.obj['fs_ops'] = fs_ops
-    ctx.obj['pkg_mgr'] = pkg_mgr
-    ctx.obj['validator'] = GuardrailsValidator()
+    ctx.obj["config"] = config
+    ctx.obj["fs_ops"] = fs_ops
+    ctx.obj["pkg_mgr"] = pkg_mgr
+    ctx.obj["validator"] = GuardrailsValidator()
 
 
 @cli.command()
 @click.pass_context
 def setup(ctx):
     """Set up the development environment."""
-    config = ctx.obj['config']
-    fs_ops = ctx.obj['fs_ops']
-    pkg_mgr = ctx.obj['pkg_mgr']
+    config = ctx.obj["config"]
+    fs_ops = ctx.obj["fs_ops"]
+    pkg_mgr = ctx.obj["pkg_mgr"]
 
     click.echo(f"Setting up development environment with {config.package_manager}...")
 
@@ -58,11 +65,11 @@ def setup(ctx):
 
 
 @cli.command()
-@click.argument('files', nargs=-1, type=click.Path(exists=True))
+@click.argument("files", nargs=-1, type=click.Path(exists=True))
 @click.pass_context
 def stage(ctx, files):
     """Stage files for commit using git."""
-    fs_ops = ctx.obj['fs_ops']
+    fs_ops = ctx.obj["fs_ops"]
 
     if not files:
         click.echo("No files specified")
@@ -73,34 +80,34 @@ def stage(ctx, files):
 
 
 @cli.command()
-@click.argument('message')
+@click.argument("message")
 @click.pass_context
 def commit(ctx, message):
     """Commit staged changes."""
-    fs_ops = ctx.obj['fs_ops']
+    fs_ops = ctx.obj["fs_ops"]
 
     fs_ops.commit_changes(message)
     click.echo("Changes committed")
 
 
 @cli.command()
-@click.option('--prefix', default='install-arch-', help='Prefix for temp directory')
+@click.option("--prefix", default="install-arch-", help="Prefix for temp directory")
 @click.pass_context
 def temp_dir(ctx, prefix):
     """Create a secure temporary directory."""
-    fs_ops = ctx.obj['fs_ops']
+    fs_ops = ctx.obj["fs_ops"]
 
     temp_dir = fs_ops.create_secure_temp_dir(prefix)
     click.echo(f"Created temporary directory: {temp_dir}")
 
 
 @cli.command()
-@click.option('--suffix', default='', help='File suffix')
-@click.option('--prefix', default='install-arch-', help='File prefix')
+@click.option("--suffix", default="", help="File suffix")
+@click.option("--prefix", default="install-arch-", help="File prefix")
 @click.pass_context
 def temp_file(ctx, suffix, prefix):
     """Create a secure temporary file."""
-    fs_ops = ctx.obj['fs_ops']
+    fs_ops = ctx.obj["fs_ops"]
 
     temp_file = fs_ops.create_temp_file(suffix, prefix)
     click.echo(f"Created temporary file: {temp_file}")
@@ -110,11 +117,11 @@ def temp_file(ctx, suffix, prefix):
 @click.pass_context
 def clean_temp(ctx):
     """Clean up temporary files and directories."""
-    fs_ops = ctx.obj['fs_ops']
+    fs_ops = ctx.obj["fs_ops"]
 
     # This would need to track created temp files/dirs
     # For now, just clean the base temp directory
-    import shutil
+
     temp_base = Path(fs_ops.config.tmp_base_dir)
     if temp_base.exists():
         shutil.rmtree(temp_base)
@@ -128,7 +135,7 @@ def clean_temp(ctx):
 @click.pass_context
 def check_guardrails(ctx):
     """Check compliance with package functionality baseline guardrails."""
-    validator = ctx.obj.get('validator', GuardrailsValidator())
+    validator = ctx.obj.get("validator", GuardrailsValidator())
 
     compliance = validator.check_compliance()
 
@@ -152,7 +159,7 @@ def check_guardrails(ctx):
 @click.pass_context
 def enforce_guardrails(ctx):
     """Enforce guardrails compliance (will exit with error if violations found)."""
-    validator = ctx.obj.get('validator', GuardrailsValidator())
+    validator = ctx.obj.get("validator", GuardrailsValidator())
 
     try:
         validator.enforce_guardrails()
@@ -162,5 +169,76 @@ def enforce_guardrails(ctx):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+@cli.command()
+@click.pass_context
+def local_ci(ctx):
+    """Run local CI-equivalent checks (guardrails, tests, linting)."""
+
+    click.echo("🚀 Running local CI checks...")
+    click.echo()
+
+    # Colors for output
+    GREEN = "\033[0;32m"
+    RED = "\033[0;31m"
+    NC = "\033[0m"
+
+    def run_check(name, command, cwd=None):
+        """Run a check command and return success status."""
+        click.echo(f"📋 {name}")
+        try:
+            result = subprocess.run(
+                command,
+                shell=True,
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                timeout=300,  # 5 minute timeout
+            )
+            if result.returncode == 0:
+                click.echo(f"{GREEN}✅ {name} passed{NC}")
+                return True
+            else:
+                click.echo(f"{RED}❌ {name} failed{NC}")
+                click.echo("Output:", err=True)
+                click.echo(result.stdout, err=True)
+                click.echo(result.stderr, err=True)
+                return False
+        except subprocess.TimeoutExpired:
+            click.echo(f"{RED}❌ {name} timed out{NC}", err=True)
+            return False
+        except Exception as e:
+            click.echo(f"{RED}❌ {name} error: {e}{NC}", err=True)
+            return False
+
+    checks = [
+        ("Guardrails Check", "uv run python -m install_arch.cli check-guardrails"),
+        (
+            "Tests with Coverage",
+            "uv run pytest tests/ --cov=src/install_arch --cov-fail-under=80",
+        ),
+        ("Ruff", "uv run ruff check src/ tests/"),
+        ("MyPy", "uv run mypy src/install_arch/"),
+        ("Ruff Format Check", "uv run ruff format --check src/ tests/"),
+    ]
+
+    all_passed = True
+    for name, command in checks:
+        if not run_check(name, command):
+            all_passed = False
+
+    click.echo()
+    if all_passed:
+        click.echo(
+            f"{GREEN}🎉 All local CI checks passed! Ready to commit and push.{NC}"
+        )
+        sys.exit(0)
+    else:
+        click.echo(
+            f"{RED}❌ Some checks failed. Please fix issues before committing.{NC}",
+            err=True,
+        )
+        sys.exit(1)
+
+
+if __name__ == "__main__":
     cli()

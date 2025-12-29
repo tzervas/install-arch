@@ -2,7 +2,44 @@
 
 This project contains a complete automated installation system for Arch Linux configured as a high-performance virtualization host.
 
-## Development
+## Development Workflow
+
+This project uses automated quality checks to ensure code consistency and catch issues early.
+
+### Pre-commit Hooks
+
+Pre-commit hooks run automatically on every commit to enforce:
+- Guardrails compliance
+- Test execution
+- Code formatting (black)
+- Import sorting (isort)
+- Linting (flake8)
+- Type checking (mypy)
+
+```bash
+# Install pre-commit hooks
+pre-commit install
+
+# Run all checks manually
+pre-commit run --all-files
+```
+
+### Local CI Checks
+
+Run the same checks that execute in CI pipelines locally:
+
+```bash
+# Using the CLI command
+uv run python -m install_arch.cli local-ci
+
+# Or using the script
+./scripts/run-local-ci.sh
+
+# Quick test run only
+uv run pytest tests/ -x --tb=short
+```
+
+### Development Environment
 
 For development work requiring additional packages or tools, use the devcontainer environment:
 

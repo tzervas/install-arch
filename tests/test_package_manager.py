@@ -1,10 +1,11 @@
 """Tests for package manager utilities."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from pathlib import Path
-from unittest.mock import patch, MagicMock
-from install_arch.package_manager import PackageManager
+
 from install_arch.config import DevConfig
+from install_arch.package_manager import PackageManager
 
 
 class TestPackageManager:
@@ -23,7 +24,7 @@ class TestPackageManager:
         assert pkg_mgr.config == config
         assert pkg_mgr.tool == "uv"
 
-    @patch('install_arch.package_manager.subprocess.run')
+    @patch("install_arch.package_manager.subprocess.run")
     def test_run_command_success(self, mock_run, tmp_path):
         """Test successful command execution."""
         pkg_mgr = PackageManager()
@@ -34,7 +35,7 @@ class TestPackageManager:
         assert result.returncode == 0
         mock_run.assert_called_once()
 
-    @patch('install_arch.package_manager.subprocess.run')
+    @patch("install_arch.package_manager.subprocess.run")
     def test_run_command_failure(self, mock_run, tmp_path):
         """Test failed command execution."""
         pkg_mgr = PackageManager()
@@ -44,7 +45,7 @@ class TestPackageManager:
         with pytest.raises(Exception):
             pkg_mgr._run_command(["failing", "command"], cwd=tmp_path)
 
-    @patch('install_arch.package_manager.PackageManager._run_command')
+    @patch("install_arch.package_manager.PackageManager._run_command")
     def test_is_uv_installed_true(self, mock_run):
         """Test uv installation check when installed."""
         pkg_mgr = PackageManager()
@@ -54,7 +55,7 @@ class TestPackageManager:
         assert pkg_mgr._is_uv_installed() is True
         mock_run.assert_called_once_with(["uv", "--version"])
 
-    @patch('install_arch.package_manager.PackageManager._run_command')
+    @patch("install_arch.package_manager.PackageManager._run_command")
     def test_is_uv_installed_false(self, mock_run):
         """Test uv installation check when not installed."""
         pkg_mgr = PackageManager()
@@ -63,8 +64,8 @@ class TestPackageManager:
 
         assert pkg_mgr._is_uv_installed() is False
 
-    @patch('install_arch.package_manager.PackageManager._run_command')
-    @patch('install_arch.package_manager.PackageManager._is_uv_installed')
+    @patch("install_arch.package_manager.PackageManager._run_command")
+    @patch("install_arch.package_manager.PackageManager._is_uv_installed")
     def test_install_tool_uv_not_installed(self, mock_is_installed, mock_run):
         """Test uv installation when not installed."""
         pkg_mgr = PackageManager()
@@ -78,8 +79,8 @@ class TestPackageManager:
         assert "bash" in args
         assert "uv" in " ".join(args)
 
-    @patch('install_arch.package_manager.PackageManager._run_command')
-    @patch('install_arch.package_manager.PackageManager._is_uv_installed')
+    @patch("install_arch.package_manager.PackageManager._run_command")
+    @patch("install_arch.package_manager.PackageManager._is_uv_installed")
     def test_install_tool_uv_already_installed(self, mock_is_installed, mock_run):
         """Test uv installation when already installed."""
         pkg_mgr = PackageManager()
@@ -90,7 +91,7 @@ class TestPackageManager:
         # Should not install uv
         mock_run.assert_not_called()
 
-    @patch('install_arch.package_manager.PackageManager._run_command')
+    @patch("install_arch.package_manager.PackageManager._run_command")
     def test_create_venv_uv(self, mock_run, tmp_path):
         """Test venv creation with uv."""
         config = DevConfig()
@@ -102,11 +103,11 @@ class TestPackageManager:
         assert result == venv_path
         mock_run.assert_called_once_with(["uv", "venv", str(venv_path)])
 
-    @patch('install_arch.package_manager.PackageManager._run_command')
+    @patch("install_arch.package_manager.PackageManager._run_command")
     def test_create_venv_pip(self, mock_run, tmp_path):
         """Test venv creation with pip."""
         config = DevConfig()
-        config._config['package_manager']['tool'] = 'pip'
+        config._config["package_manager"]["tool"] = "pip"
         pkg_mgr = PackageManager(config)
 
         venv_path = tmp_path / "test_venv"
@@ -117,7 +118,7 @@ class TestPackageManager:
         args = mock_run.call_args[0][0]
         assert "venv" in args
 
-    @patch('install_arch.package_manager.PackageManager._run_command')
+    @patch("install_arch.package_manager.PackageManager._run_command")
     def test_install_dependencies_uv(self, mock_run):
         """Test dependency installation with uv."""
         config = DevConfig()
@@ -134,15 +135,15 @@ class TestPackageManager:
         assert "-e" in expected_calls[0]
         assert "--dev" in expected_calls[0]
 
-    @patch('install_arch.package_manager.PackageManager._run_command')
+    @patch("install_arch.package_manager.PackageManager._run_command")
     def test_install_dependencies_pip(self, mock_run, tmp_path):
         """Test dependency installation with pip."""
         config = DevConfig()
-        config._config['package_manager']['tool'] = 'pip'
+        config._config["package_manager"]["tool"] = "pip"
         pkg_mgr = PackageManager(config)
 
         # Mock venv path
-        config._config['package_manager']['venv_path'] = str(tmp_path / "venv")
+        config._config["package_manager"]["venv_path"] = str(tmp_path / "venv")
         pkg_mgr.install_dependencies(dev=False)
 
         mock_run.assert_called_once()
@@ -156,14 +157,14 @@ class TestPackageManager:
         config = DevConfig()
         pkg_mgr = PackageManager(config)
 
-        config._config['package_manager']['venv_path'] = '/test/venv'
+        config._config["package_manager"]["venv_path"] = "/test/venv"
         cmd = pkg_mgr.activate_venv()
         assert cmd == "source /test/venv/bin/activate"
 
     def test_activate_venv_poetry(self):
         """Test venv activation command for poetry."""
         config = DevConfig()
-        config._config['package_manager']['tool'] = 'poetry'
+        config._config["package_manager"]["tool"] = "poetry"
         pkg_mgr = PackageManager(config)
 
         cmd = pkg_mgr.activate_venv()
@@ -172,7 +173,7 @@ class TestPackageManager:
     def test_activate_venv_pipenv(self):
         """Test venv activation command for pipenv."""
         config = DevConfig()
-        config._config['package_manager']['tool'] = 'pipenv'
+        config._config["package_manager"]["tool"] = "pipenv"
         pkg_mgr = PackageManager(config)
 
         cmd = pkg_mgr.activate_venv()

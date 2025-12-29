@@ -39,7 +39,6 @@ jobs:
 
     - name: Run linting
       run: |
-        uv run flake8 src/ tests/
+        uv run ruff check src/ tests/
         uv run mypy src/install_arch/
-        uv run black --check src/ tests/
-        uv run isort --check-only src/ tests/
+        uv run ruff format --check src/ tests/

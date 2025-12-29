@@ -1,14 +1,11 @@
 """Tests for filesystem operations."""
 
-import os
-import shutil
-import pytest
 import subprocess
-import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
-from install_arch.filesystem import FileSystemOps
+from unittest.mock import MagicMock, patch
+
 from install_arch.config import DevConfig
+from install_arch.filesystem import FileSystemOps
 
 
 class TestFileSystemOps:
@@ -62,7 +59,7 @@ class TestFileSystemOps:
     def test_remove_file(self, tmp_path):
         """Test file removal without git."""
         config = DevConfig()
-        config._config['filesystem']['use_git_ops'] = False
+        config._config["filesystem"]["use_git_ops"] = False
         fs_ops = FileSystemOps(config)
 
         test_file = tmp_path / "test.txt"
@@ -71,7 +68,7 @@ class TestFileSystemOps:
         fs_ops.remove_file(test_file)
         assert not test_file.exists()
 
-    @patch('install_arch.filesystem.subprocess.run')
+    @patch("install_arch.filesystem.subprocess.run")
     def test_remove_file_with_git(self, mock_run, tmp_path):
         """Test file removal with git."""
         config = DevConfig()
@@ -81,7 +78,7 @@ class TestFileSystemOps:
         test_file.write_text("content")
 
         # Mock git repo check
-        with patch.object(fs_ops, '_is_git_repo', return_value=True):
+        with patch.object(fs_ops, "_is_git_repo", return_value=True):
             fs_ops.remove_file(test_file)
 
             mock_run.assert_called_once_with(
@@ -89,13 +86,13 @@ class TestFileSystemOps:
                 cwd=Path.cwd(),
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
 
     def test_create_secure_temp_dir(self, tmp_path):
         """Test secure temporary directory creation."""
         config = DevConfig()
-        config._config['filesystem']['tmp_base_dir'] = str(tmp_path)
+        config._config["filesystem"]["tmp_base_dir"] = str(tmp_path)
         fs_ops = FileSystemOps(config)
 
         temp_dir = fs_ops.create_secure_temp_dir("test-")
@@ -111,7 +108,7 @@ class TestFileSystemOps:
     def test_create_temp_file(self, tmp_path):
         """Test temporary file creation."""
         config = DevConfig()
-        config._config['filesystem']['tmp_base_dir'] = str(tmp_path)
+        config._config["filesystem"]["tmp_base_dir"] = str(tmp_path)
         fs_ops = FileSystemOps(config)
 
         temp_file = fs_ops.create_temp_file(suffix=".txt", prefix="test-")
@@ -144,14 +141,14 @@ class TestFileSystemOps:
         fs_ops.cleanup_temp(test_dir)
         assert not test_dir.exists()
 
-    @patch('install_arch.filesystem.subprocess.run')
+    @patch("install_arch.filesystem.subprocess.run")
     def test_get_repo_files(self, mock_run):
         """Test getting repository files."""
         fs_ops = FileSystemOps()
 
         mock_run.return_value = MagicMock(stdout="file1.py\nfile2.py\n", returncode=0)
 
-        with patch.object(fs_ops, '_is_git_repo', return_value=True):
+        with patch.object(fs_ops, "_is_git_repo", return_value=True):
             files = fs_ops.get_repo_files("*.py")
             assert files == [Path("file1.py"), Path("file2.py")]
 
@@ -160,17 +157,17 @@ class TestFileSystemOps:
                 cwd=Path.cwd(),
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
 
-    @patch('install_arch.filesystem.subprocess.run')
+    @patch("install_arch.filesystem.subprocess.run")
     def test_stage_files(self, mock_run, tmp_path):
         """Test staging files."""
         fs_ops = FileSystemOps()
 
         files = [tmp_path / "file1.txt", tmp_path / "file2.txt"]
 
-        with patch.object(fs_ops, '_is_git_repo', return_value=True):
+        with patch.object(fs_ops, "_is_git_repo", return_value=True):
             fs_ops.stage_files(files)
 
             mock_run.assert_called_once_with(
@@ -178,15 +175,15 @@ class TestFileSystemOps:
                 cwd=Path.cwd(),
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
 
-    @patch('install_arch.filesystem.subprocess.run')
+    @patch("install_arch.filesystem.subprocess.run")
     def test_commit_changes(self, mock_run):
         """Test committing changes."""
         fs_ops = FileSystemOps()
 
-        with patch.object(fs_ops, '_is_git_repo', return_value=True):
+        with patch.object(fs_ops, "_is_git_repo", return_value=True):
             fs_ops.commit_changes("Test commit")
 
             mock_run.assert_called_once_with(
@@ -194,12 +191,16 @@ class TestFileSystemOps:
                 cwd=Path.cwd(),
                 capture_output=True,
                 text=True,
-                check=True
+                check=True,
             )
 
     def test_is_git_repo_false(self):
         """Test git repo detection when not in repo."""
         fs_ops = FileSystemOps()
 
-        with patch.object(fs_ops, '_run_git_command', side_effect=subprocess.CalledProcessError(1, 'git')):
+        with patch.object(
+            fs_ops,
+            "_run_git_command",
+            side_effect=subprocess.CalledProcessError(1, "git"),
+        ):
             assert fs_ops._is_git_repo() is False
