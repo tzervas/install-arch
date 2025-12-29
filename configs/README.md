@@ -113,7 +113,7 @@ Once booted into the Arch Linux live environment:
 # Copy configuration from USB to RAM disk
 mkdir -p /root/archinstall-configs
 mount /dev/disk/by-label/CONFIGS /mnt
-cp /mnt/archinstall/* /root/archinstall-configs/
+cp /mnt/archinstall-configs/* /root/archinstall-configs/
 umount /mnt
 
 # Set encryption password
