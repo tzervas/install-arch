@@ -36,11 +36,11 @@ install-arch/
    ```bash
    # In Arch live environment
    mkdir -p /root/archconfig
-   mount /dev/disk/by-label/ARCH_* /mnt
-   cp -r /mnt/archinstall /root/archconfig
+   mount /dev/disk/by-label/CONFIGS /mnt
+   cp /mnt/archinstall/* /root/archconfig/
    umount /mnt
 
-   cd /root/archconfig/archinstall
+   cd /root/archconfig
    ./configure-installer.sh  # Set LUKS password
 
    archinstall --config archinstall-config.json

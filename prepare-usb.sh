@@ -101,9 +101,23 @@ echo -e "${YELLOW}Unmounting USB device...${NC}"
 umount ${USB_DEVICE}* 2>/dev/null || true
 sleep 1
 
-# Write ISO to USB
-echo -e "${YELLOW}Writing ISO to USB (this will take 5-10 minutes)...${NC}"
-dd if="$ISO_PATH" of="$USB_DEVICE" bs=4M status=progress oflag=sync conv=fsync
+# Partition the USB device
+echo -e "${YELLOW}Partitioning USB device...${NC}"
+parted -s "$USB_DEVICE" mklabel msdos
+parted -s "$USB_DEVICE" mkpart primary 1MiB 2048MiB  # ISO partition (2GB)
+parted -s "$USB_DEVICE" mkpart primary fat32 2048MiB 100%  # Config partition
+parted -s "$USB_DEVICE" set 1 boot on
+
+# Wait for partitions to be recognized
+echo -e "${YELLOW}Syncing and waiting for partitions...${NC}"
+sync
+sleep 3
+partprobe "$USB_DEVICE" 2>/dev/null || true
+sleep 2
+
+# Write ISO to first partition
+echo -e "${YELLOW}Writing ISO to USB partition (this will take 5-10 minutes)...${NC}"
+dd if="$ISO_PATH" of="${USB_DEVICE}1" bs=4M status=progress oflag=sync conv=fsync
 
 # Wait for kernel to recognize the new partition table
 echo ""
@@ -113,37 +127,29 @@ sleep 3
 partprobe "$USB_DEVICE" 2>/dev/null || true
 sleep 2
 
-# Find the partition label (Arch ISO creates multiple partitions)
-echo -e "${YELLOW}Detecting ISO partitions...${NC}"
-ARCH_PARTITION=$(lsblk -no PATH,LABEL "$USB_DEVICE" | grep -i "ARCH" | head -n1 | awk '{print $1}')
+# Format the config partition
+echo -e "${YELLOW}Formatting config partition as FAT...${NC}"
+mkfs.vfat "${USB_DEVICE}2" -n CONFIGS
 
-if [ -z "$ARCH_PARTITION" ]; then
-    echo -e "${YELLOW}Could not find ARCH partition, trying first partition...${NC}"
-    ARCH_PARTITION="${USB_DEVICE}1"
-fi
+# Wait for formatting to complete
+sync
+sleep 2
 
-echo -e "${GREEN}Using partition: $ARCH_PARTITION${NC}"
+# Mount the config partition
+CONFIG_PARTITION="${USB_DEVICE}2"
+echo -e "${GREEN}Using config partition: $CONFIG_PARTITION${NC}"
 
-# Mount the USB
-echo -e "${YELLOW}Mounting USB...${NC}"
+echo -e "${YELLOW}Mounting config partition...${NC}"
 MOUNT_POINT=$(mktemp -d)
 sleep 2
 
-# Try mounting
-for i in {1..3}; do
-    if mount "$ARCH_PARTITION" "$MOUNT_POINT" 2>/dev/null; then
-        echo -e "${GREEN}Mounted successfully${NC}"
-        break
-    fi
-    echo -e "${YELLOW}Mount attempt $i failed, retrying...${NC}"
-    sleep 2
-done
-
-if ! mountpoint -q "$MOUNT_POINT"; then
-    echo -e "${RED}Error: Failed to mount USB${NC}"
+if ! mount "$CONFIG_PARTITION" "$MOUNT_POINT" 2>/dev/null; then
+    echo -e "${RED}Error: Failed to mount config partition${NC}"
     rmdir "$MOUNT_POINT"
     exit 1
 fi
+
+echo -e "${GREEN}Mounted successfully${NC}"
 
 # Create config directory on USB
 echo -e "${YELLOW}Creating configuration directory...${NC}"
@@ -178,7 +184,7 @@ ARCH LINUX AUTOMATED INSTALLER - QUICK START
 2. Once in the Arch live environment, run:
 
    mkdir -p /root/archconfig
-   mount /dev/disk/by-label/ARCH_* /mnt
+   mount /dev/disk/by-label/CONFIGS /mnt
    cp /mnt/archinstall/* /root/archconfig/
    umount /mnt
    

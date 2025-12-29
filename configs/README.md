@@ -112,7 +112,7 @@ Once booted into the Arch Linux live environment:
 ```bash
 # Copy configuration from USB to RAM disk
 mkdir -p /root/archinstall-configs
-mount /dev/disk/by-label/ARCH_* /mnt
+mount /dev/disk/by-label/CONFIGS /mnt
 cp /mnt/archinstall/* /root/archinstall-configs/
 umount /mnt
 

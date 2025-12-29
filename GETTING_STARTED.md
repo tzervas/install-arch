@@ -85,16 +85,16 @@ Once booted into Arch Linux live environment:
 ```bash
 # Mount USB and copy configs
 mkdir -p /root/archconfig
-mount /dev/disk/by-label/ARCH_* /mnt
-cp -r /mnt/archinstall /root/archconfig
+mount /dev/disk/by-label/CONFIGS /mnt
+cp /mnt/archinstall/* /root/archconfig/
 umount /mnt
 
 # Configure encryption password (IMPORTANT!)
-cd /root/archconfig/archinstall
+cd /root/archconfig
 ./configure-installer.sh
 
 # Run automated installer
-archinstall --config /root/archconfig/archinstall/archinstall-config.json
+archinstall --config /root/archconfig/archinstall-config.json
 ```
 
 The installer will:
