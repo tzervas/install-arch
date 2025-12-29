@@ -239,5 +239,25 @@ done
 ```
 EOF
 
+# Create systemd service to ensure root is read-only after boot
+cat > "$ROOT_MOUNT/etc/systemd/system/remount-root-ro.service" << 'EOF'
+[Unit]
+Description=Remount root filesystem read-only
+DefaultDependencies=no
+After=local-fs.target
+Before=sysinit.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/mount -o remount,ro /
+RemainAfterExit=yes
+
+[Install]
+WantedBy=sysinit.target
+EOF
+
+# Enable the service
+ln -sf "$ROOT_MOUNT/etc/systemd/system/remount-root-ro.service" "$ROOT_MOUNT/etc/systemd/system/sysinit.target.wants/remount-root-ro.service"
+
 echo "Post-installation configuration complete!"
 echo "The system will be configured with read-only root on first boot."
