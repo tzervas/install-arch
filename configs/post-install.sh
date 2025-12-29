@@ -243,9 +243,8 @@ EOF
 cat > "$ROOT_MOUNT/etc/systemd/system/remount-root-ro.service" << 'EOF'
 [Unit]
 Description=Remount root filesystem read-only
-DefaultDependencies=no
-After=local-fs.target
-Before=sysinit.target
+After=sysinit.target
+Before=systemd-tmpfiles-setup.service
 
 [Service]
 Type=oneshot
@@ -253,7 +252,7 @@ ExecStart=/bin/mount -o remount,ro /
 RemainAfterExit=yes
 
 [Install]
-WantedBy=sysinit.target
+WantedBy=multi-user.target
 EOF
 
 # Enable the service
