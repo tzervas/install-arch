@@ -227,8 +227,12 @@ done
 # Make scripts executable
 echo -e "${YELLOW}Setting permissions...${NC}"
 chmod -v +x "$CONFIG_USB_DIR"/*.sh
-chmod -v +x "$CONFIG_USB_DIR/system-update.sh"
-chmod -v +x "$CONFIG_USB_DIR/first-login-setup.sh"
+if [[ -f "$CONFIG_USB_DIR/system-update.sh" ]]; then
+    chmod -v +x "$CONFIG_USB_DIR/system-update.sh"
+fi
+if [[ -f "$CONFIG_USB_DIR/first-login-setup.sh" ]]; then
+    chmod -v +x "$CONFIG_USB_DIR/first-login-setup.sh"
+fi
 
 # Verify files
 echo ""
