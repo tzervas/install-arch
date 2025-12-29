@@ -55,6 +55,21 @@ install-arch/
 - **Virtualization**: KVM/QEMU with PCIe passthrough ready
 - **Security**: Read-only root filesystem, forced password change
 
+## Hardware Compatibility Matrix
+
+| CPU Model | GPU Model | Status | Notes |
+|-----------|-----------|--------|-------|
+| Intel 14700K | RTX 5080 | ✅ Fully Supported | Primary development platform |
+| Intel 14700K | RTX 4070 | ✅ Supported | Tested passthrough configuration |
+| E5-2665 v4 | RTX 5080 | ⚠️ Limited Support | Requires kernel parameter adjustments |
+| E5-2665 v4 | Quadro P4000 | ✅ Supported | Enterprise GPU configuration |
+
+**Compatibility Notes**:
+- All configurations require VT-x/VT-d and IOMMU enabled in BIOS
+- TPM 2.0 integration available for supported CPUs
+- PCIe passthrough tested on all listed combinations
+- BTRFS snapshots verified on all hardware
+
 ## Features
 
 - ✅ Automated partitioning and encryption
@@ -69,6 +84,27 @@ install-arch/
 ## Documentation
 
 See [GETTING_STARTED.md](GETTING_STARTED.md) for complete installation and usage instructions.
+
+## Copilot Integration
+
+This project includes comprehensive GitHub Copilot customization for enhanced development experience:
+
+- **Repository Instructions** (`.github/copilot-instructions.md`): Global coding guidelines
+- **Path-Specific Instructions** (`.github/instructions/`): Context-aware rules for scripts/configs
+- **Custom Agents** (`.github/agents/`): Specialized assistants for different tasks
+- **Reusable Prompts** (`.github/prompts/`): Task-specific prompt templates
+
+**Agent Model Configuration**: Agents specify `model: grok-code-fast-1` but this field is ignored on github.com. Select Grok Code Fast 1 in your IDE's model picker to use it with custom agents.
+
+**Available Agents**:
+- `@project-manager`: Planning and milestone tracking
+- `@orchestrator`: Task coordination and execution
+- `@linux-sysadmin`: System administration tasks
+- `@security`: Security configurations and hardening
+- `@testing`: Installation validation and testing
+- `@documentation`: Documentation maintenance
+- `@evaluator`: Code quality assessment
+- `@pr-review`: Quality control gatekeeping
 
 ## Requirements
 

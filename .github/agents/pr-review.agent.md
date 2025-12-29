@@ -8,17 +8,29 @@ tools:
   - semantic_search
 model: grok-code-fast-1
 handoffs:
-  - label: Security issues found
+  - label: Security vulnerabilities found
     agent: security
-    prompt: Security vulnerabilities detected in PR, please review and advise
-    send: false
-  - label: Code quality issues
+    prompt: Critical security issues detected in PR - immediate review required
+    send: true
+  - label: Code quality issues requiring fixes
     agent: evaluator
-    prompt: Code quality issues found, please evaluate and suggest fixes
+    prompt: Code quality violations found - evaluation and fixes needed
     send: false
-  - label: Testing required
+  - label: Testing gaps identified
     agent: testing
-    prompt: Changes require additional testing, please validate
+    prompt: Insufficient testing coverage - additional validation required
+    send: false
+  - label: Documentation updates needed
+    agent: documentation
+    prompt: Documentation gaps found - updates required for completeness
+    send: false
+  - label: System configuration issues
+    agent: linux-sysadmin
+    prompt: System configuration problems detected - admin review needed
+    send: false
+  - label: Hardware compatibility concerns
+    agent: virtualization
+    prompt: Hardware abstraction issues found - compatibility review required
     send: false
 ---
 

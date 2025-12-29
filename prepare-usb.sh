@@ -3,6 +3,26 @@
 
 set -e
 
+# Cleanup function
+cleanup() {
+    local exit_code=$?
+    echo -e "${YELLOW}Cleaning up...${NC}"
+    if [ -d "${MOUNT_POINT:-}" ] && mountpoint -q "${MOUNT_POINT:-}"; then
+        umount "${MOUNT_POINT:-}" || true
+        rmdir "${MOUNT_POINT:-}" || true
+    fi
+    if [ $exit_code -ne 0 ]; then
+        echo -e "${RED}Script failed with exit code $exit_code${NC}"
+        echo -e "${YELLOW}Recovery suggestions:${NC}"
+        echo "1. Check USB device: lsblk"
+        echo "2. Re-run script after fixing issues"
+        echo "3. Verify ISO integrity manually"
+    fi
+    exit $exit_code
+}
+
+trap cleanup EXIT
+
 # Configuration
 ISO_DIR="/home/spooky/Documents/projects/install-arch/iso"
 ISO_NAME="archlinux-2025.12.01-x86_64.iso"
@@ -143,9 +163,24 @@ echo -e "${YELLOW}Mounting config partition...${NC}"
 MOUNT_POINT=$(mktemp -d)
 sleep 2
 
-if ! mount "$CONFIG_PARTITION" "$MOUNT_POINT" 2>/dev/null; then
-    echo -e "${RED}Error: Failed to mount config partition${NC}"
-    rmdir "$MOUNT_POINT"
+# Try mounting with retries
+for i in {1..5}; do
+    if mount "$CONFIG_PARTITION" "$MOUNT_POINT" 2>/dev/null; then
+        echo -e "${GREEN}Mounted successfully on attempt $i${NC}"
+        break
+    fi
+    echo -e "${YELLOW}Mount attempt $i failed, retrying...${NC}"
+    sleep 2
+    partprobe "$USB_DEVICE" 2>/dev/null || true
+    sleep 1
+done
+
+if ! mountpoint -q "$MOUNT_POINT"; then
+    echo -e "${RED}Error: Failed to mount config partition after 5 attempts${NC}"
+    echo -e "${YELLOW}Troubleshooting:${NC}"
+    echo "1. Check partition table: fdisk -l $USB_DEVICE"
+    echo "2. Verify filesystem: fsck.vfat $CONFIG_PARTITION"
+    echo "3. Try manual mount: mount $CONFIG_PARTITION /mnt"
     exit 1
 fi
 
