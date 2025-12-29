@@ -11,9 +11,7 @@ This project uses automated quality checks to ensure code consistency and catch 
 Pre-commit hooks run automatically on every commit to enforce:
 - Guardrails compliance
 - Test execution
-- Code formatting (black)
-- Import sorting (isort)
-- Linting (flake8)
+- Code quality (ruff)
 - Type checking (mypy)
 
 ```bash
