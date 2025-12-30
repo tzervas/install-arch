@@ -74,4 +74,4 @@ jobs:
     - name: Run semantic release
       run: uv run semantic-release version --changelog --push --tag
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ github.token }}
