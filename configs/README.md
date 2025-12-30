@@ -57,18 +57,16 @@ sudo /home/spooky/Documents/projects/install-arch/prepare-usb.sh
 
 The script will:
 1. Download the Arch Linux ISO if not present
-2. Create two partitions on the USB:
-   - Partition 1: Bootable Arch ISO (extracted contents, ~2.5GB)
-   - Partition 2: Configuration files (remaining space)
-3. Extract ISO contents and copy to bootable partition
-4. Copy all configuration files to the config partition
-5. Verify bootloader files are present
-6. Create a QUICKSTART.txt guide on the USB
+2. Download and install Ventoy bootloader on the USB
+3. Copy the Arch Linux ISO file to the Ventoy data partition
+4. Copy all configuration files to the `/configs` directory on the USB
+5. Create a QUICKSTART.txt guide on the USB
 
-**Note**: The script now extracts ISO contents to a FAT32 partition instead of using `dd` to write the ISO directly. This approach:
-- Allows for a separate configuration partition
-- Avoids partition table conflicts
-- Ensures proper bootability with modern UEFI systems
+**Note**: The script uses Ventoy, a universal bootloader that supports multiple ISOs and ensures bootability across both UEFI and legacy BIOS systems. This approach:
+- Provides reliable bootability on modern hardware
+- Allows multiple ISOs on the same USB
+- Includes a Ventoy menu for ISO selection
+- Maintains configuration files alongside the ISO
 
 ### 2. Boot from USB
 
@@ -79,8 +77,9 @@ The script will:
    - **IOMMU** (Input-Output Memory Management Unit)
    - **Above 4G Decoding** (for GPU passthrough)
    - **Resizable BAR** (optional, for GPU performance)
-4. Set USB as first boot device
+4. Set USB as first boot device (look for "Ventoy" or similar)
 5. Save and reboot
+6. Select the Arch Linux ISO from the Ventoy menu when it appears
 
 ### 3. Run the Installer
 
@@ -89,8 +88,8 @@ Once booted into the Arch Linux live environment:
 ```bash
 # Copy configuration from USB to RAM disk
 mkdir -p /root/archinstall-configs
-mount /dev/disk/by-label/CONFIGS /mnt
-cp /mnt/archinstall-configs/* /root/archinstall-configs/
+mount /dev/sdb1 /mnt  # Mount the Ventoy data partition (adjust device if needed)
+cp /mnt/configs/* /root/archinstall-configs/
 umount /mnt
 
 # Set encryption password

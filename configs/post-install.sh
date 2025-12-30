@@ -258,5 +258,391 @@ EOF
 # Enable the service
 ln -sf "$ROOT_MOUNT/etc/systemd/system/remount-root-ro.service" "$ROOT_MOUNT/etc/systemd/system/sysinit.target.wants/remount-root-ro.service"
 
+echo "=== Blackwell Station Custom Configuration ==="
+echo "Applying E5-2665 v4 server specific settings..."
+
+# Configure network bridge for virtualization
+cat > "$ROOT_MOUNT/etc/netctl/bridge-br0" << 'EOF'
+Description='Bridge for virtualization'
+Interface=br0
+Connection=bridge
+BindsToInterfaces=(enp1s0)  # Adjust interface name as needed
+IP=dhcp
+EOF
+
+# Enable network bridge
+ln -sf "$ROOT_MOUNT/etc/netctl/bridge-br0" "$ROOT_MOUNT/etc/systemd/system/multi-user.target.wants/netctl@bridge-br0.service"
+
+# Configure libvirt hooks for GPU passthrough (placeholder)
+mkdir -p "$ROOT_MOUNT/etc/libvirt/hooks"
+cat > "$ROOT_MOUNT/etc/libvirt/hooks/qemu" << 'EOF'
+#!/bin/bash
+# Libvirt hook for GPU passthrough
+# This will be customized based on specific GPU configuration
+
+OBJECT="$1"
+OPERATION="$2"
+
+if [ "$OBJECT" = "prepare" ] && [ "$OPERATION" = "begin" ]; then
+    # Unbind GPU from host driver
+    echo "Preparing GPU passthrough..."
+    # Add GPU unbind commands here when ready
+fi
+
+if [ "$OBJECT" = "release" ] && [ "$OPERATION" = "end" ]; then
+    # Rebind GPU to host driver
+    echo "Releasing GPU passthrough..."
+    # Add GPU rebind commands here when ready
+fi
+EOF
+chmod +x "$ROOT_MOUNT/etc/libvirt/hooks/qemu"
+
+# Configure systemd for better virtualization support
+cat > "$ROOT_MOUNT/etc/systemd/system/libvirtd.service.d/override.conf" << 'EOF'
+[Service]
+LimitNOFILE=4096
+EOF
+
+# Set up basic monitoring (placeholder)
+cat > "$ROOT_MOUNT/etc/systemd/system/system-monitor.service" << 'EOF'
+[Unit]
+Description=Basic System Monitoring
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/journalctl -f -n 50
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+echo "Blackwell Station configuration applied successfully!"
+
+echo "=== Security Hardening Configuration ==="
+echo "Implementing security recommendations..."
+
+# UFW Firewall Configuration
+echo "Configuring UFW firewall with basic rules..."
+if command -v ufw >/dev/null 2>&1; then
+    systemctl enable ufw
+    ufw default deny incoming
+    ufw default allow outgoing
+    ufw allow ssh
+    ufw --force enable
+else
+    echo "UFW not installed, skipping firewall configuration"
+fi
+
+# SSH Hardening
+echo "Hardening SSH configuration..."
+if [ -f "$ROOT_MOUNT/etc/ssh/sshd_config" ]; then
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' "$ROOT_MOUNT/etc/ssh/sshd_config"
+    sed -i 's/#PermitRootLogin yes/PermitRootLogin no/' "$ROOT_MOUNT/etc/ssh/sshd_config"
+    sed -i 's/PermitRootLogin yes/PermitRootLogin no/' "$ROOT_MOUNT/etc/ssh/sshd_config"
+    systemctl enable sshd
+else
+    echo "SSH config not found, skipping SSH hardening"
+fi
+
+# Docker Security Configuration
+echo "Configuring Docker security settings..."
+if command -v docker >/dev/null 2>&1; then
+    mkdir -p "$ROOT_MOUNT/etc/docker"
+    cat > "$ROOT_MOUNT/etc/docker/daemon.json" << 'EOF'
+{
+    "userns-remap": "default",
+    "icc": false
+}
+EOF
+    systemctl enable docker
+else
+    echo "Docker not installed, skipping Docker security configuration"
+fi
+
+# Disable Unnecessary Services
+echo "Disabling unnecessary services (bluetooth, cups)..."
+systemctl disable bluetooth.service 2>/dev/null || true
+systemctl disable cups.service 2>/dev/null || true
+
+echo "Security hardening configuration complete!"
+
+echo "=== KDE Plasma Desktop Enhancements ==="
+echo "Configuring KDE Plasma for better desktop experience..."
+
+# KDE Plasma configuration directory
+KDE_CONFIG_DIR="$ROOT_MOUNT/home/kang/.config"
+mkdir -p "$KDE_CONFIG_DIR"
+
+# Set up KDE globals configuration
+cat > "$KDE_CONFIG_DIR/kdeglobals" << 'EOF'
+[General]
+TerminalApplication=konsole
+BrowserApplication=firefox.desktop
+XftHintStyle=hintslight
+XftSubPixel=none
+
+[KDE]
+LookAndFeelPackage=org.kde.breezedark.desktop
+SingleClick=false
+ShowDeleteCommand=false
+
+[Icons]
+Theme=breeze-dark
+
+[Toolbar style]
+ToolButtonStyle=TextBesideIcon
+EOF
+
+# Configure KDE appearance (Breeze Dark theme)
+mkdir -p "$KDE_CONFIG_DIR/plasma-org.kde.plasma.desktop-appletsrc"
+cat > "$KDE_CONFIG_DIR/plasma-org.kde.plasma.desktop-appletsrc" << 'EOF'
+[Containments][1][General]
+icon=/usr/share/icons/breeze-dark/apps/48/system-file-manager.svg
+plugin=org.kde.plasma.folder
+EOF
+
+# Set up default applications
+cat > "$ROOT_MOUNT/usr/share/applications/defaults.list" << 'EOF'
+[Default Applications]
+text/html=firefox.desktop
+x-scheme-handler/http=firefox.desktop
+x-scheme-handler/https=firefox.desktop
+x-scheme-handler/ftp=firefox.desktop
+x-scheme-handler/chrome=firefox.desktop
+application/x-extension-htm=firefox.desktop
+application/x-extension-html=firefox.desktop
+application/x-extension-shtml=firefox.desktop
+application/xhtml+xml=firefox.desktop
+application/x-extension-xhtml=firefox.desktop
+application/x-extension-xht=firefox.desktop
+audio/*=vlc.desktop
+video/*=vlc.desktop
+application/ogg=vlc.desktop
+application/x-ogg=vlc.desktop
+application/mxf=vlc.desktop
+application/sdp=vlc.desktop
+application/smil=vlc.desktop
+application/x-smil=vlc.desktop
+application/streamingmedia=vlc.desktop
+application/x-streamingmedia=vlc.desktop
+application/vnd.rn-realmedia=vlc.desktop
+application/vnd.rn-realmedia-vbr=vlc.desktop
+audio/aac=vlc.desktop
+audio/x-aac=vlc.desktop
+audio/vnd.dolby.heaac.1=vlc.desktop
+audio/vnd.dolby.heaac.2=vlc.desktop
+audio/aiff=vlc.desktop
+audio/x-aiff=vlc.desktop
+audio/amr=vlc.desktop
+audio/amr-wb=vlc.desktop
+audio/basic=vlc.desktop
+audio/x-basic=vlc.desktop
+EOF
+
+# Configure KDE services (enable useful ones, disable resource-intensive)
+cat > "$KDE_CONFIG_DIR/kded5rc" << 'EOF'
+[Module-device_automounter]
+autoload=true
+
+[Module-freespacenotifier]
+autoload=true
+
+[Module-kded_accounts]
+autoload=true
+
+[Module-kded_touchpad]
+autoload=true
+
+[Module-ksysguard]
+autoload=false
+
+[Module-plasma-nm]
+autoload=true
+
+[Module-printmanager]
+autoload=true
+
+[Module-remotenotifier]
+autoload=false
+
+[Module-statusnotifierwatcher]
+autoload=true
+EOF
+
+# Configure power management for desktop use
+cat > "$KDE_CONFIG_DIR/powermanagementprofilesrc" << 'EOF'
+[AC][DimDisplay]
+idleTime=300000
+
+[AC][HandleButtonEvents]
+lidAction=1
+powerButtonAction=16
+triggerLidActionWhenExternalMonitorPresent=false
+
+[AC][SuspendSession]
+idleTime=600000
+suspendType=1
+
+[Battery][DimDisplay]
+idleTime=120000
+
+[Battery][HandleButtonEvents]
+lidAction=1
+powerButtonAction=16
+triggerLidActionWhenExternalMonitorPresent=false
+
+[Battery][SuspendSession]
+idleTime=300000
+suspendType=1
+
+[LowBattery][Brightness]
+value=30
+
+[LowBattery][DimDisplay]
+idleTime=60000
+
+[LowBattery][HandleButtonEvents]
+lidAction=1
+powerButtonAction=16
+triggerLidActionWhenExternalMonitorPresent=false
+
+[LowBattery][SuspendSession]
+idleTime=120000
+suspendType=1
+EOF
+
+# Configure keyboard shortcuts for common tasks
+cat > "$KDE_CONFIG_DIR/kglobalshortcutsrc" << 'EOF'
+[ksmserver]
+Lock Session=Ctrl+Alt+L,none,Lock Session
+
+[kwin]
+Show Desktop=Meta+D,none,Show Desktop
+Window Close=Alt+F4,none,Close Window
+Window Maximize=Meta+Up,none,Maximize Window
+Window Minimize=Meta+Down,none,Minimize Window
+Window Quick Tile Bottom=Meta+Down,none,Quick Tile Window to the Bottom
+Window Quick Tile Left=Meta+Left,none,Quick Tile Window to the Left
+Window Quick Tile Right=Meta+Right,none,Quick Tile Window to the Right
+Window Quick Tile Top=Meta+Up,none,Quick Tile Window to the Top
+
+[plasma-desktop]
+activate task manager entry 1=Meta+1,none,Activate Task Manager Entry 1
+activate task manager entry 2=Meta+2,none,Activate Task Manager Entry 2
+activate task manager entry 3=Meta+3,none,Activate Task Manager Entry 3
+activate task manager entry 4=Meta+4,none,Activate Task Manager Entry 4
+activate task manager entry 5=Meta+5,none,Activate Task Manager Entry 5
+EOF
+
+# Configure notifications
+cat > "$KDE_CONFIG_DIR/plasmanotifyrc" << 'EOF'
+[Applications][firefox]
+ShowPopups=true
+ShowInHistory=true
+ConfigureEvents=true
+
+[Applications][vlc]
+ShowPopups=true
+ShowInHistory=true
+ConfigureEvents=true
+
+[Applications][virt-manager]
+ShowPopups=true
+ShowInHistory=true
+ConfigureEvents=true
+
+[Applications][systemsettings]
+ShowPopups=false
+ShowInHistory=false
+ConfigureEvents=false
+EOF
+
+# Set up desktop effects (enable useful ones, disable heavy ones)
+cat > "$KDE_CONFIG_DIR/kwinrc" << 'EOF'
+[Compositing]
+Enabled=true
+OpenGLIsUnsafe=false
+XRenderSmoothScale=false
+
+[Effect-overview]
+BorderActivate=9
+
+[Effect-presentwindows]
+BorderActivate=9
+
+[Effect-windowview]
+BorderActivate=9
+
+[Plugins]
+blurEnabled=true
+contrastEnabled=false
+dashboardEnabled=false
+desktopgridEnabled=true
+diminactiveEnabled=true
+dimscreenEnabled=false
+flipswitchEnabled=false
+glideEnabled=false
+kwin4_effect_fadeEnabled=true
+kwin4_effect_fadedesktopEnabled=false
+kwin4_effect_fadeinEnabled=true
+kwin4_effect_fadetoopaqueEnabled=false
+kwin4_effect_loginEnabled=false
+kwin4_effect_logoutEnabled=false
+kwin4_effect_maximizeEnabled=false
+kwin4_effect_morphingpopupsEnabled=false
+kwin4_effect_scaleEnabled=false
+kwin4_effect_squashEnabled=false
+kwin4_effect_startupfeedbackEnabled=true
+kwin4_effect_translucencyEnabled=false
+kwin4_effect_windowapertureEnabled=false
+magnifierEnabled=false
+minimizeanimationEnabled=true
+mouseclickEnabled=false
+mousemarkEnabled=false
+overviewEnabled=true
+presentwindowsEnabled=true
+screenedgeEnabled=true
+screenshotEnabled=false
+sheetEnabled=false
+showfpsEnabled=false
+showpaintEnabled=false
+slideEnabled=false
+slidingpopupsEnabled=true
+snaphelperEnabled=true
+thumbnailasideEnabled=false
+trackmouseEnabled=false
+wobblywindowsEnabled=false
+zoomEnabled=false
+EOF
+
+# Configure Dolphin file manager defaults
+cat > "$KDE_CONFIG_DIR/dolphinrc" << 'EOF'
+[General]
+BrowseThroughArchives=false
+ConfirmClosingMultipleTabs=false
+RememberOpenedTabs=false
+ShowFullPath=true
+ShowSelectionToggle=true
+Version=4
+
+[MainWindow]
+MenuBar=Disabled
+ToolBarsMovable=Disabled
+
+[PreviewSettings]
+Plugins=desktop,audiothumbnail,imagethumbnail,jpegthumbnail,svgthumbnail,textthumbnail,windowsexethumbnail,comicsimagethumbnail,directorythumbnail,opendocumentthumbnail
+
+[ViewPropertiesDialog]
+dir=/home/kang
+EOF
+
+# Set proper ownership for KDE config files
+if [ -n "$ROOT_MOUNT" ]; then
+    chown -R 1000:1000 "$ROOT_MOUNT/home/kang/.config" 2>/dev/null || true
+fi
+
+echo "KDE Plasma desktop enhancements configured!"
+
 echo "Post-installation configuration complete!"
-echo "The system will be configured with read-only root on first boot."

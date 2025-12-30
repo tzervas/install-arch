@@ -1,0 +1,17 @@
+# Codeowners for install-arch repository
+# Require reviews from maintainers for all changes
+
+# Global owners
+* @tzervas
+
+# Specific paths
+.github/ @tzervas
+src/ @tzervas
+configs/ @tzervas
+scripts/ @tzervas
+docs/ @tzervas
+tests/ @tzervas
+
+# Devcontainer and CI
+.devcontainer/ @tzervas
+.github/workflows/ @tzervas

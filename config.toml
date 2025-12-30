@@ -1,0 +1,44 @@
+# Install Arch Configuration
+# This file contains all configurable parameters for the install-arch project
+# Values can be overridden by environment variables or local-config.toml
+
+# Application settings
+application_name = "install-arch"
+application_version = "1.1.1"
+application_description = "Automated Arch Linux installation with security-first configurations"
+
+# URL configurations
+uv_install_url = "https://astral.sh/uv/install.sh"
+poetry_install_url = "https://install.python-poetry.org"
+arch_mirrors = "https://mirror.rackspace.com/archlinux/iso https://geo.mirror.pkgbuild.com/iso https://mirrors.kernel.org/archlinux/iso"
+ventoy_base_url = "https://github.com/ventoy/Ventoy/releases/download"
+
+# Version settings
+arch_iso_version = "2025.12.01"
+ventoy_version = "1.0.99"
+python_min_version = "3.11"
+
+# Path configurations
+workspace_dir = "/workspaces/install-arch"
+temp_base_dir = "/tmp/install-arch"
+ventoy_extract_dir = "ventoy-{version}-linux"
+iso_filename = "archlinux-{version}-x86_64.iso"
+
+# Network settings
+dns_test_ip = "8.8.8.8"
+docker_registry_url = "https://index.docker.io/v2/"
+
+# Virtualization settings
+qemu_monitor_port = "4444"
+qemu_qmp_port = "4445"
+qemu_host_ip = "127.0.0.1"
+
+# Security settings
+secure_temp_enabled = "true"
+validate_checksums = "true"
+require_encryption = "true"
+
+# Development settings (legacy compatibility)
+venv_path = ".venv"
+python_version = "3.11"
+use_git_ops = "true"

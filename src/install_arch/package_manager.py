@@ -6,14 +6,14 @@ import sys
 from pathlib import Path
 from typing import List, Optional
 
-from .config import DevConfig
+from .config import Config, DevConfig
 
 
 class PackageManager:
     """Unified interface for different Python package managers."""
 
-    def __init__(self, config: Optional[DevConfig] = None):
-        self.config = config or DevConfig()
+    def __init__(self, config: Optional[Config] = None):
+        self.config = config or Config()
         self.tool = self.config.package_manager
 
     def _run_command(
@@ -52,7 +52,7 @@ class PackageManager:
 
     def _install_uv(self) -> None:
         """Install uv."""
-        install_script = "curl -LsSf https://astral.sh/uv/install.sh | sh"
+        install_script = f"curl -LsSf {self.config.uv_install_url} | sh"
         self._run_command(["bash", "-c", install_script])
 
         # Add uv to PATH
@@ -70,7 +70,7 @@ class PackageManager:
 
     def _install_poetry(self) -> None:
         """Install poetry."""
-        install_script = "curl -sSL https://install.python-poetry.org | python3 -"
+        install_script = f"curl -sSL {self.config.poetry_install_url} | python3 -"
         self._run_command(["bash", "-c", install_script])
 
     def create_venv(self, path: Optional[Path] = None) -> Path:

@@ -47,6 +47,32 @@ code .
 # Click "Reopen in Container" when prompted
 ```
 
+#### Dev Container Automation
+
+The project includes comprehensive automation for managing the Dev Container environment:
+
+```bash
+# Using Make commands
+make build          # Build the Dev Container image
+make rebuild        # Rebuild without cache
+make clean          # Clean up unused resources
+make update         # Update dependencies inside container
+make status         # Show container status
+
+# Using the CLI tool
+uv run devcontainer-build
+uv run devcontainer-rebuild
+uv run devcontainer-clean
+uv run devcontainer-status
+
+# Using the management script
+./scripts/devcontainer.sh build
+./scripts/devcontainer.sh rebuild
+./scripts/devcontainer.sh clean
+./scripts/devcontainer.sh update
+./scripts/devcontainer.sh status
+```
+
 See [Development Setup](docs/development-setup.md) for detailed instructions on:
 - Package management with uv/poetry/pip/pipenv
 - Secure filesystem operations
@@ -96,6 +122,34 @@ install-arch/
 
    archinstall --config archinstall-config.json
    ```
+
+## Testing
+
+Test the installation in a virtual machine before deploying to hardware:
+
+1. **Validate Configuration**:
+   ```bash
+   ./validate-config.sh
+   ```
+
+2. **Test in VM** (requires prepared USB):
+   ```bash
+   sudo ./test-vm.sh /dev/sdX  # Replace /dev/sdX with your USB device
+   ```
+
+   **Test Credentials**:
+   - LUKS encryption password: `testluks`
+   - User password: `changeme123` (will be forced to change on first login)
+
+3. **Expected VM Behavior**:
+   - Boots from USB via Ventoy
+   - Loads Arch Linux installer
+   - Prompts for LUKS password during partitioning
+   - Creates encrypted BTRFS filesystem
+   - Installs system with KDE Plasma
+   - Reboots into installed system
+
+See [Testing Procedures](docs/testing-procedures.md) for comprehensive validation steps.
 
 ## System Specifications
 

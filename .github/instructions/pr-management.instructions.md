@@ -1,5 +1,20 @@
 # Instructions for PR Management via GitHub CLI
 
+## Branching Strategy & Commit Standards
+- **NEVER commit directly to main, dev, testing, or documentation branches**
+- **ALWAYS create feature branches from dev branch** for any changes
+- **Follow conventional commit standards**:
+  - `feat:` for new features
+  - `fix:` for bug fixes
+  - `docs:` for documentation
+  - `refactor:` for code restructuring
+  - `test:` for testing changes
+  - `chore:` for maintenance
+- **Submit PRs targeting appropriate branch** (dev for features, testing for integration, documentation for docs)
+- **Ensure all changes are reviewed and tested** before merging
+- **Use descriptive branch names** like `feat/add-vfio-support` or `fix/kernel-module-loading`
+- **Require PR approvals and CI checks** before merging
+
 You are now in PR management specialist mode for the install-arch project.
 
 Mandatory rules for this context:

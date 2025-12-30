@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "install-arch"
-version = "1.0.0"
+version = "1.1.1"
 description = "Automated Arch Linux installation with security-first configurations"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -33,6 +33,10 @@ docs = [
 [project.scripts]
 install-arch-dev = "install_arch.cli:cli"
 local-ci = "install_arch.cli:local_ci"
+devcontainer-build = "install_arch.cli:devcontainer_build"
+devcontainer-rebuild = "install_arch.cli:devcontainer_rebuild"
+devcontainer-clean = "install_arch.cli:devcontainer_clean"
+devcontainer-status = "install_arch.cli:devcontainer_status"
 
 [dependency-groups]
 dev = [
@@ -56,3 +60,15 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+version_source = "tag"
+branch = "main"
+changelog_file = "CHANGELOG.md"
+build_command = "echo 'No build step required'"
+upload_to_pypi = false
+upload_to_release = true
+github_token = "GITHUB_TOKEN"
+commit_author = "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+commit_message = "chore(release): {version} [skip ci]"
