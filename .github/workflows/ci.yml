@@ -79,4 +79,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SEMANTIC_RELEASE_EXEC_PREPARE_CMD: sed -i 's/^version = ".*"/version = "${nextRelease.version}"/' pyproject.toml
         SEMANTIC_RELEASE_GIT_ASSETS: CHANGELOG.md pyproject.toml
-        SEMANTIC_RELEASE_GIT_MESSAGE: chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}
+        SEMANTIC_RELEASE_GIT_MESSAGE: |
+          chore(release): ${nextRelease.version} [skip ci]
+
+          ${nextRelease.notes}
