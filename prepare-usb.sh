@@ -46,7 +46,6 @@ ISO_PATH="${ISO_DIR}/${ISO_NAME}"
 ISO_URL="https://mirror.rackspace.com/archlinux/iso/2025.12.01/${ISO_NAME}"
 CONFIG_DIR="/home/spooky/Documents/projects/install-arch/configs"
 USB_DEVICE="/dev/sdb"
-USB_PARTITION="${USB_DEVICE}1"
 ISO_PARTITION_SIZE_MB=2560  # 2.5GB for ISO contents
 
 # Colors
@@ -132,7 +131,7 @@ echo ""
 echo -e "${RED}WARNING: This will COMPLETELY ERASE $USB_DEVICE!${NC}"
 echo -e "${RED}All data on this device will be permanently lost!${NC}"
 echo ""
-read -p "Are you absolutely sure? Type 'YES' to continue: " confirm
+read -r -p "Are you absolutely sure? Type 'YES' to continue: " confirm
 
 if [ "$confirm" != "YES" ]; then
     echo "Aborted."

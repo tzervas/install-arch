@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **USB Installer**: Changed from dd-to-partition to ISO content extraction to avoid partition table conflicts. The script now properly extracts ISO contents to a FAT32 partition and verifies bootloader files, preventing boot issues caused by writing an ISO (which contains its own partition table) to a partition rather than a raw device.
+
 ## [1.0.0] - 2024-12-01
 
 ### Added

@@ -32,8 +32,15 @@ This document outlines comprehensive testing procedures for validating the insta
 ### USB Preparation Test
 ```bash
 # Test USB creation without actual hardware
+# Verify ISO extraction process
 ./test-usb-prep.sh
 ```
+
+Key validations:
+- ISO contents properly extracted to partition
+- Bootloader files present (syslinux.cfg or EFI directory)
+- Config partition accessible and writable
+- All configuration files copied correctly
 
 ### Configuration Validation
 ```bash
@@ -49,7 +56,9 @@ This document outlines comprehensive testing procedures for validating the insta
 
 ## Manual Testing Checklist
 
-- [ ] USB boots on target hardware
+- [ ] USB boots on target hardware (UEFI and BIOS modes)
+- [ ] ISO partition contains bootloader files (/boot, /arch directories)
+- [ ] Config partition is accessible from live environment
 - [ ] LUKS encryption setup completes
 - [ ] BTRFS filesystem mounts correctly
 - [ ] System updates run without errors
@@ -61,8 +70,9 @@ This document outlines comprehensive testing procedures for validating the insta
 
 ## Error Recovery Testing
 
-1. **Failed USB Creation**: Verify cleanup and retry mechanisms
-2. **Boot Failures**: Test fallback boot options
+1. **Failed USB Creation**: Verify cleanup and retry mechanisms (mount point cleanup)
+2. **ISO Extraction Failures**: Test fallback and error messages
+3. **Boot Failures**: Test fallback boot options (UEFI vs BIOS)
 3. **Encryption Issues**: Validate recovery procedures
 4. **Filesystem Corruption**: Test BTRFS repair tools
 

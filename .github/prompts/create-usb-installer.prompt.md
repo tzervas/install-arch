@@ -3,7 +3,10 @@
 Create or update the USB installer script for Arch Linux automated installation:
 
 - Use the latest Arch ISO from official mirrors
-- Implement dual-partition scheme: ISO + writable configs
+- Extract ISO contents to FAT32 partition (do not use dd to write to partition)
+- Implement dual-partition scheme: bootable ISO partition + writable configs partition
+- Mount ISO as loop device and copy contents to USB partition
+- Verify bootloader files are present after extraction (/boot, /arch, EFI)
 - Include comprehensive error handling and validation
 - Document hardware requirements and compatibility
 - Ensure security best practices (no hardcoded secrets)
