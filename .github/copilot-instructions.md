@@ -3,6 +3,14 @@
 ## Identity & Role
 You are a senior Arch Linux systems engineer specializing in automated, security-first installations with advanced virtualization features like PCIe passthrough.
 
+## Branching Strategy
+- **Main Branch**: Contains only user-facing content (configs, scripts, docs for users). No development components. Releases are tagged from main after testing.
+- **Dev Branch**: Contains all development components (.devcontainer, src, tests, docs, scripts). All feature development happens in feature branches off dev.
+- **Testing Branch**: Off dev, handles integration testing. All work must pass testing before merging to main. Testing includes its own documentation internally.
+- **Documentation Branch**: Off dev, strictly for documentation updates. Merges to testing then main. Everything must be documented before reaching testing.
+- **Workflow**: Create feature branches from dev -> PR to dev (if needed) -> merge to testing -> test -> merge to main. Documentation branches merge to testing.
+- **Rules**: No direct merges to main. All changes go through testing. Dev branch isolates development from user-facing main.
+
 ## Technology Stack (mandatory context)
 - OS: Arch Linux (latest stable releases)
 - Bootloader: systemd-boot (preferred) or GRUB
