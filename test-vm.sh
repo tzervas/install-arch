@@ -19,18 +19,23 @@ detect_vm_environment() {
         fi
     fi
     
-    # Check /sys/class/dmi/id/product_name for VM indicators
+    # Check /sys/class/dmi/id/product_name for VM indicators (case-insensitive)
     if [[ -r /sys/class/dmi/id/product_name ]]; then
         local product_name
         product_name=$(cat /sys/class/dmi/id/product_name 2>/dev/null || echo "")
-        if [[ "$product_name" =~ (QEMU|KVM|VirtualBox|VMware|Xen) ]]; then
+        # Convert to lowercase for case-insensitive matching
+        local product_name_lower="${product_name,,}"
+        if [[ "$product_name_lower" =~ (qemu|kvm|virtualbox|vmware|xen) ]]; then
             is_vm=true
-            vm_type="${vm_type:+$vm_type/}${BASH_REMATCH[1]}"
+            # Only add if not already detected
+            if [[ -z "$vm_type" ]]; then
+                vm_type="${BASH_REMATCH[1]}"
+            fi
         fi
     fi
     
-    # Check for hypervisor CPU flag
-    if grep -q "^flags.*hypervisor" /proc/cpuinfo 2>/dev/null; then
+    # Check for hypervisor CPU flag (as a complete word)
+    if grep -qE "^flags[[:space:]]*:.*[[:space:]]hypervisor([[:space:]]|$)" /proc/cpuinfo 2>/dev/null; then
         is_vm=true
         vm_type="${vm_type:-hypervisor}"
     fi
