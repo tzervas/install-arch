@@ -1,9 +1,16 @@
  
- {
+{
   "name": "install-arch-dev",
   "build": {
     "dockerfile": "Dockerfile",
-    "context": ".."
+    "context": "..",
+    "args": {
+      "MODE": "mount",
+      "BRANCH": "main",
+      "DEPTH": "full",
+      "VERSION": "latest",
+      "REPO_URL": "https://github.com/spooky/install-arch.git"
+    }
   },
   "customizations": {
     "vscode": {
@@ -29,4 +36,5 @@
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   }
+}
 }

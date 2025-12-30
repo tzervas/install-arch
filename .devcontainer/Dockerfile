@@ -1,6 +1,20 @@
 # Build development environment from Debian 13 (Trixie) slim base
 FROM debian:trixie-slim
 
+# Build arguments for configuration
+ARG MODE=mount
+ARG BRANCH=main
+ARG DEPTH=full
+ARG VERSION=latest
+ARG REPO_URL=https://github.com/spooky/install-arch.git
+
+# Set environment variables for runtime
+ENV MODE=$MODE
+ENV BRANCH=$BRANCH
+ENV DEPTH=$DEPTH
+ENV VERSION=$VERSION
+ENV REPO_URL=$REPO_URL
+
 # Install system requirements and essential tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \

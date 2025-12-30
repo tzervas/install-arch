@@ -3,6 +3,24 @@ set -euo pipefail
 
 echo "Setting up development environment..."
 
+# Handle repository setup based on mode
+if [ "$MODE" = "clone" ]; then
+    echo "Cloning repository in clone mode..."
+    if [ "$DEPTH" = "shallow" ]; then
+        git clone --depth 1 --branch "$BRANCH" "$REPO_URL" /workspaces/install-arch
+    else
+        git clone --branch "$BRANCH" "$REPO_URL" /workspaces/install-arch
+    fi
+    cd /workspaces/install-arch
+elif [ "$MODE" = "user" ]; then
+    echo "Setting up for user mode with version $VERSION..."
+    mkdir -p /workspaces/install-arch
+    cd /workspaces/install-arch
+else
+    echo "Using mounted workspace..."
+    cd /workspaces/install-arch
+fi
+
 # uv should already be installed from the base image
 if ! command -v uv &> /dev/null; then
     echo "Error: uv not found in base image"
@@ -10,15 +28,19 @@ if ! command -v uv &> /dev/null; then
 fi
 echo "Using uv $(uv --version) for Python package management"
 
-# Create uv-managed virtual environment and install dependencies
-cd /workspaces/install-arch
-echo "Creating Python virtual environment..."
-uv venv .venv
-source .venv/bin/activate
-
-# Install the package in development mode
-echo "Installing package in development mode..."
-uv pip install -e .
+# Install based on version
+if [ "$VERSION" = "latest" ] && [ "$MODE" != "user" ]; then
+    # Development mode
+    echo "Creating Python virtual environment..."
+    uv venv .venv
+    source .venv/bin/activate
+    echo "Installing package in development mode..."
+    uv pip install -e .
+else
+    # Install released version
+    echo "Installing install-arch version $VERSION..."
+    uv pip install install-arch${VERSION:+==$VERSION}
+fi
 
 # Install additional essential tools if needed (Debian packages)
 echo "Installing additional development tools..."
