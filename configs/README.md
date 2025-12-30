@@ -48,52 +48,29 @@ The installer will automatically partition your 2TB NVMe drive as follows:
 
 **WARNING: This will erase all data on the USB drive!**
 
-```bash
-# Unmount the USB if mounted
-sudo umount /media/spooky/USB\ DISK
-
-# Write ISO to USB (takes 5-10 minutes)
-sudo dd if=/home/spooky/Documents/projects/install-arch/iso/arch/archlinux-2025.12.01-x86_64.iso \
-    of=/dev/sdb bs=4M status=progress oflag=sync
-
-# Wait for the write to complete
-sync
-```
-
-### 2. Copy Configuration Files to USB
+Use the automated USB preparation script:
 
 ```bash
-# Create a temporary mount point
-mkdir -p /tmp/usbmount
-
-# Mount the USB
-sudo mount /dev/sdb1 /tmp/usbmount
-
-# Create config directory on USB
-sudo mkdir -p /tmp/usbmount/archinstall
-
-# Copy configuration files
-sudo cp /home/spooky/Documents/projects/install-arch/configs/archinstall-config.json \
-    /tmp/usbmount/archinstall/
-sudo cp /home/spooky/Documents/projects/install-arch/configs/system-update \
-    /tmp/usbmount/archinstall/
-sudo cp /home/spooky/Documents/projects/install-arch/configs/force-password-change.sh \
-    /tmp/usbmount/archinstall/
-sudo cp /home/spooky/Documents/projects/install-arch/configs/first-login-setup \
-    /tmp/usbmount/archinstall/
-sudo cp /home/spooky/Documents/projects/install-arch/configs/post-install.sh \
-    /tmp/usbmount/archinstall/
-
-# Make scripts executable
-sudo chmod +x /tmp/usbmount/archinstall/*.sh
-sudo chmod +x /tmp/usbmount/archinstall/system-update
-sudo chmod +x /tmp/usbmount/archinstall/first-login-setup
-
-# Unmount
-sudo umount /tmp/usbmount
+# Run the USB preparation script (recommended)
+sudo /home/spooky/Documents/projects/install-arch/prepare-usb.sh
 ```
 
-### 3. Boot from USB
+The script will:
+1. Download the Arch Linux ISO if not present
+2. Create two partitions on the USB:
+   - Partition 1: Bootable Arch ISO (extracted contents, ~2.5GB)
+   - Partition 2: Configuration files (remaining space)
+3. Extract ISO contents and copy to bootable partition
+4. Copy all configuration files to the config partition
+5. Verify bootloader files are present
+6. Create a QUICKSTART.txt guide on the USB
+
+**Note**: The script now extracts ISO contents to a FAT32 partition instead of using `dd` to write the ISO directly. This approach:
+- Allows for a separate configuration partition
+- Avoids partition table conflicts
+- Ensures proper bootability with modern UEFI systems
+
+### 2. Boot from USB
 
 1. Insert the USB drive into your target PC
 2. Enter BIOS/UEFI (usually F2, F12, or DEL)
@@ -105,7 +82,7 @@ sudo umount /tmp/usbmount
 4. Set USB as first boot device
 5. Save and reboot
 
-### 4. Run the Installer
+### 3. Run the Installer
 
 Once booted into the Arch Linux live environment:
 
@@ -141,7 +118,7 @@ Then select:
 - Desktop: KDE Plasma
 - Network: NetworkManager
 
-### 5. Post-Installation Setup
+### 4. Post-Installation Setup
 
 After installation completes and you reboot:
 

@@ -61,10 +61,13 @@
 **Purpose**: Automated USB drive preparation script
 **Instructions**:
 - Include safety checks and warnings
-- Validate ISO integrity before writing
+- Validate ISO integrity before extraction
+- Extract ISO contents to FAT32 partition (do not use dd to partition)
+- Create separate bootable ISO partition and config partition
+- Verify bootloader files after extraction
 - Test on multiple USB drive sizes
 - Document hardware requirements
-- Include cleanup procedures
+- Include cleanup procedures for mount points
 - Support different ISO versions
 - Verify all copied files
 

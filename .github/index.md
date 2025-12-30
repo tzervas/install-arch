@@ -46,7 +46,7 @@ install-arch/
 
 | File | Purpose | Key Features | Dependencies |
 | ---- | ------- | ------------ | ------------ |
-| `prepare-usb.sh` | USB drive preparation | ISO writing, config copying, verification | `dd`, `lsblk`, `mount` |
+| `prepare-usb.sh` | USB drive preparation | ISO extraction, config copying, verification | `mount`, `cp`, `lsblk`, `parted` |
 | `GETTING_STARTED.md` | Quick start guide | Step-by-step installation | References all components |
 | `README.md` | Project documentation | Overview, features, usage | Comprehensive guide |
 
@@ -62,7 +62,7 @@ install-arch/
 
 ### Installation Flow
 
-1. `prepare-usb.sh` → Writes ISO and copies configs to USB
+1. `prepare-usb.sh` → Extracts ISO contents and copies configs to USB partitions
 2. Boot from USB → `archinstall-config.json` drives automated install
 3. Post-install → `post-install.sh` configures advanced features
 4. First boot → `first-login-setup` and `force-password-change.sh` run
