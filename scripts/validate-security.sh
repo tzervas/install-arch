@@ -1,10 +1,18 @@
 #!/bin/bash
 # validate-security.sh
 # Validate security configurations
+# 
+# Usage: validate-security.sh [username]
+#   If username is not provided, uses $SUDO_USER or current user
 
 set -e
 
+# Determine username to validate
+# Priority: command-line arg > SUDO_USER env var > current user
+USERNAME="${1:-${SUDO_USER:-$(whoami)}}"
+
 echo "=== Validating Security Configuration ==="
+echo "Validating for user: $USERNAME"
 
 # Check firewall status
 echo "Checking UFW firewall..."
@@ -46,10 +54,10 @@ done
 
 # Check password policies
 echo "Checking password policies..."
-if ! passwd -S kang | grep -q "Password must be changed"; then
-    echo "WARNING: Password change not enforced for user kang"
+if ! passwd -S "$USERNAME" | grep -q "Password must be changed"; then
+    echo "WARNING: Password change not enforced for user $USERNAME"
 else
-    echo "✓ Password change enforced for user kang"
+    echo "✓ Password change enforced for user $USERNAME"
 fi
 
 # Check sudo configuration
