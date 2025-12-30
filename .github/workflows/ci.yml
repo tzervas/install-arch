@@ -64,7 +64,7 @@ jobs:
         python-version: '3.13'
 
     - name: Install python-semantic-release
-      run: uv add --dev python-semantic-release
+      run: uv pip install python-semantic-release
 
     - name: Run semantic release
       run: uv run semantic-release version --changelog --push --tag
