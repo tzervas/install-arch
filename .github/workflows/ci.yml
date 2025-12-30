@@ -70,7 +70,7 @@ jobs:
       uses: cycjimmy/semantic-release-action@v3
       with:
         semantic_version: 18.0.0
-        extra_plugins: @semantic-release/changelog @semantic-release/git@10.0.1 @semantic-release/github @semantic-release/exec
+        extra_plugins: "@semantic-release/changelog @semantic-release/git@10.0.1 @semantic-release/github @semantic-release/exec"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SEMANTIC_RELEASE_EXEC_PREPARE_CMD: sed -i 's/^version = ".*"/version = "${nextRelease.version}"/' pyproject.toml
