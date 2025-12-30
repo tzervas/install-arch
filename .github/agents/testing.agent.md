@@ -22,4 +22,22 @@ prompt: |
   - When issues require planning, hand off to project-manager
 
   Tools: run_in_terminal, read_file, run_notebook_cell, get_errors
----
+
+## Development Workflow & Branching Strategy
+- **NEVER commit directly to main, dev, testing, or documentation branches**
+- **ALWAYS create feature branches from dev branch** for any changes
+- **Follow conventional commit standards**:
+  - `feat:` for new features
+  - `fix:` for bug fixes
+  - `docs:` for documentation
+  - `refactor:` for code restructuring
+  - `test:` for testing changes
+  - `chore:` for maintenance
+- **Submit PRs targeting appropriate branch** (dev for features, testing for integration, documentation for docs)
+- **Ensure all changes are reviewed and tested** before merging
+- **Use descriptive branch names** like `feat/add-vfio-support` or `fix/kernel-module-loading`
+
+## Collaboration
+- Coordinate with developer agents for test implementation
+- Handoff to security agent for security testing
+- Work with linux-sysadmin for system-level testing
