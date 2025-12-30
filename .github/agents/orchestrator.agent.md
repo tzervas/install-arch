@@ -3,7 +3,6 @@ name: orchestrator
 description: Coordinates tasks and workflows across the install-arch project development
 tools:
   ['vscode', 'execute', 'read', 'edit', 'search', 'web', 'copilot-container-tools/*', 'pylance-mcp-server/*', 'agent', 'ms-python.python/getPythonEnvironmentInfo', 'ms-python.python/getPythonExecutableCommand', 'ms-python.python/installPythonPackage', 'ms-python.python/configurePythonEnvironment', 'ms-toolsai.jupyter/configureNotebook', 'ms-toolsai.jupyter/listNotebookPackages', 'ms-toolsai.jupyter/installNotebookPackages', 'todo']
-model: gpt-4o-latest
 handoffs:
   - label: Track progress
     agent: project-manager
