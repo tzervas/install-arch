@@ -258,5 +258,67 @@ EOF
 # Enable the service
 ln -sf "$ROOT_MOUNT/etc/systemd/system/remount-root-ro.service" "$ROOT_MOUNT/etc/systemd/system/sysinit.target.wants/remount-root-ro.service"
 
+echo "=== Blackwell Station Custom Configuration ==="
+echo "Applying E5-2665 v4 server specific settings..."
+
+# Configure network bridge for virtualization
+cat > "$ROOT_MOUNT/etc/netctl/bridge-br0" << 'EOF'
+Description='Bridge for virtualization'
+Interface=br0
+Connection=bridge
+BindsToInterfaces=(enp1s0)  # Adjust interface name as needed
+IP=dhcp
+EOF
+
+# Enable network bridge
+ln -sf "$ROOT_MOUNT/etc/netctl/bridge-br0" "$ROOT_MOUNT/etc/systemd/system/multi-user.target.wants/netctl@bridge-br0.service"
+
+# Configure libvirt hooks for GPU passthrough (placeholder)
+mkdir -p "$ROOT_MOUNT/etc/libvirt/hooks"
+cat > "$ROOT_MOUNT/etc/libvirt/hooks/qemu" << 'EOF'
+#!/bin/bash
+# Libvirt hook for GPU passthrough
+# This will be customized based on specific GPU configuration
+
+OBJECT="$1"
+OPERATION="$2"
+
+if [ "$OBJECT" = "prepare" ] && [ "$OPERATION" = "begin" ]; then
+    # Unbind GPU from host driver
+    echo "Preparing GPU passthrough..."
+    # Add GPU unbind commands here when ready
+fi
+
+if [ "$OBJECT" = "release" ] && [ "$OPERATION" = "end" ]; then
+    # Rebind GPU to host driver
+    echo "Releasing GPU passthrough..."
+    # Add GPU rebind commands here when ready
+fi
+EOF
+chmod +x "$ROOT_MOUNT/etc/libvirt/hooks/qemu"
+
+# Configure systemd for better virtualization support
+cat > "$ROOT_MOUNT/etc/systemd/system/libvirtd.service.d/override.conf" << 'EOF'
+[Service]
+LimitNOFILE=4096
+EOF
+
+# Set up basic monitoring (placeholder)
+cat > "$ROOT_MOUNT/etc/systemd/system/system-monitor.service" << 'EOF'
+[Unit]
+Description=Basic System Monitoring
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/journalctl -f -n 50
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+echo "Blackwell Station configuration applied successfully!"
+
 echo "Post-installation configuration complete!"
 echo "The system will be configured with read-only root on first boot."

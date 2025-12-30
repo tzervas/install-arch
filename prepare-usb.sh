@@ -7,25 +7,10 @@ set -e
 cleanup() {
     local exit_code=$?
     echo -e "${YELLOW}Cleaning up...${NC}"
-    # Unmount config partition if mounted
-    if [ -d "${MOUNT_POINT:-}" ] && mountpoint -q "${MOUNT_POINT:-}"; then
-        umount "${MOUNT_POINT:-}" || true
-        rmdir "${MOUNT_POINT:-}" || true
-    fi
-    # Unmount ISO mount if it exists
-    if [ -d "${ISO_MOUNT:-}" ] && mountpoint -q "${ISO_MOUNT:-}"; then
-        umount "${ISO_MOUNT:-}" || true
-        rmdir "${ISO_MOUNT:-}" || true
-    fi
-    # Unmount USB mount if it exists
-    if [ -d "${USB_MOUNT:-}" ] && mountpoint -q "${USB_MOUNT:-}"; then
-        umount "${USB_MOUNT:-}" || true
-        rmdir "${USB_MOUNT:-}" || true
-    fi
-    # Unmount USB verify mount if it exists
-    if [ -d "${USB_VERIFY_MOUNT:-}" ] && mountpoint -q "${USB_VERIFY_MOUNT:-}"; then
-        umount "${USB_VERIFY_MOUNT:-}" || true
-        rmdir "${USB_VERIFY_MOUNT:-}" || true
+    # Unmount Ventoy mount if mounted
+    if [ -d "${VENTOY_MOUNT:-}" ] && mountpoint -q "${VENTOY_MOUNT:-}"; then
+        umount "${VENTOY_MOUNT:-}" || true
+        rmdir "${VENTOY_MOUNT:-}" || true
     fi
     if [ $exit_code -ne 0 ]; then
         echo -e "${RED}Script failed with exit code $exit_code${NC}"
@@ -43,10 +28,11 @@ trap cleanup EXIT
 ISO_DIR="/home/spooky/Documents/projects/install-arch/iso"
 ISO_NAME="archlinux-2025.12.01-x86_64.iso"
 ISO_PATH="${ISO_DIR}/${ISO_NAME}"
-ISO_URL="https://mirror.rackspace.com/archlinux/iso/2025.12.01/${ISO_NAME}"
+# Dynamic URL construction for checksum retrieval
+ISO_BASE_URL="https://mirror.rackspace.com/archlinux/iso/2025.12.01"
+ISO_URL="${ISO_BASE_URL}/${ISO_NAME}"
 CONFIG_DIR="/home/spooky/Documents/projects/install-arch/configs"
 USB_DEVICE="/dev/sdb"
-ISO_PARTITION_SIZE_MB=2560  # 2.5GB for ISO contents
 
 # Colors
 RED='\033[0;31m'
@@ -89,20 +75,120 @@ else
     echo -e "${GREEN}Using existing ISO: $ISO_PATH${NC}"
 fi
 
-# Verify ISO integrity
+# Download Ventoy if needed
+VENTOY_VERSION="1.0.99"
+VENTOY_TAR="ventoy-${VENTOY_VERSION}-linux.tar.gz"
+VENTOY_URL="https://github.com/ventoy/Ventoy/releases/download/v${VENTOY_VERSION}/${VENTOY_TAR}"
+VENTOY_DIR="ventoy-${VENTOY_VERSION}"
+
+if [ ! -d "$VENTOY_DIR" ]; then
+    echo -e "${YELLOW}Downloading Ventoy...${NC}"
+    if command -v wget >/dev/null 2>&1; then
+        wget "$VENTOY_URL"
+    elif command -v curl >/dev/null 2>&1; then
+        curl -L -o "$VENTOY_TAR" "$VENTOY_URL"
+    else
+        echo -e "${RED}Error: Neither wget nor curl found. Please install one to download Ventoy.${NC}"
+        exit 1
+    fi
+
+    if [ ! -f "$VENTOY_TAR" ]; then
+        echo -e "${RED}Error: Failed to download Ventoy${NC}"
+        exit 1
+    fi
+
+    echo -e "${YELLOW}Extracting Ventoy...${NC}"
+    tar -xzf "$VENTOY_TAR"
+    echo -e "${GREEN}Ventoy downloaded and extracted${NC}"
+fi
+
+# Verify ISO integrity with dynamic checksum retrieval
 echo -e "${YELLOW}Verifying ISO integrity...${NC}"
-if ! sha256sum -c "$ISO_DIR/sha256sums.txt" --ignore-missing "$ISO_PATH" >/dev/null 2>&1; then
-    echo -e "${RED}Error: ISO verification failed${NC}"
-    echo -e "${YELLOW}Expected checksums:${NC}"
-    grep "$ISO_NAME" "$ISO_DIR/sha256sums.txt" || echo "No checksum found for $ISO_NAME"
-    echo -e "${YELLOW}Actual checksum:${NC}"
-    sha256sum "$ISO_PATH"
+
+# Enhanced checksum verification with dynamic retrieval
+verify_iso_checksum() {
+    local iso_path="$1"
+    local local_checksum_file="$2"
+    local iso_name="$3"
+    local iso_url="$4"
+
+    echo -e "${BLUE}Performing multi-source checksum verification...${NC}"
+
+    # Calculate actual checksum
+    local actual_checksum
+    actual_checksum=$(sha256sum "$iso_path" | awk '{print $1}')
+    echo -e "${BLUE}Calculated checksum: ${actual_checksum}${NC}"
+
+    # Check local checksum file first
+    local local_checksum=""
+    if [ -f "$local_checksum_file" ]; then
+        local_checksum=$(grep "$iso_name" "$local_checksum_file" | awk '{print $1}' | head -1)
+        if [ -n "$local_checksum" ]; then
+            echo -e "${BLUE}Found local checksum: ${local_checksum}${NC}"
+            if [ "$local_checksum" = "$actual_checksum" ]; then
+                echo -e "${GREEN}✓ Local checksum verification passed${NC}"
+            else
+                echo -e "${RED}✗ Local checksum verification failed!${NC}"
+                echo -e "${YELLOW}Expected: $local_checksum${NC}"
+                return 1
+            fi
+        fi
+    fi
+
+    # Try to download official checksums from Arch Linux
+    echo -e "${BLUE}Attempting to download official checksums...${NC}"
+    local official_checksum=""
+    local checksum_url="${iso_url%/*}/sha256sums.txt"
+
+    # Try multiple mirrors in case one fails
+    local mirrors=(
+        "https://mirror.rackspace.com/archlinux/iso/2025.12.01"
+        "https://geo.mirror.pkgbuild.com/iso/2025.12.01"
+        "https://mirrors.kernel.org/archlinux/iso/2025.12.01"
+    )
+
+    for mirror in "${mirrors[@]}"; do
+        local mirror_checksum_url="${mirror%/*}/sha256sums.txt"
+        echo -e "${BLUE}Trying mirror: ${mirror_checksum_url}${NC}"
+
+        if curl -s --max-time 10 "$mirror_checksum_url" -o /tmp/arch-checksums.txt 2>/dev/null; then
+            official_checksum=$(grep "$iso_name" /tmp/arch-checksums.txt | awk '{print $1}' | head -1)
+            if [ -n "$official_checksum" ]; then
+                echo -e "${GREEN}✓ Downloaded official checksum: ${official_checksum}${NC}"
+                break
+            fi
+        fi
+    done
+
+    # Clean up temp file
+    rm -f /tmp/arch-checksums.txt
+
+    # Verify against official checksum if available
+    if [ -n "$official_checksum" ]; then
+        if [ "$official_checksum" = "$actual_checksum" ]; then
+            echo -e "${GREEN}✓ Official checksum verification passed${NC}"
+            return 0
+        else
+            echo -e "${RED}✗ Official checksum verification failed!${NC}"
+            echo -e "${YELLOW}Official: $official_checksum${NC}"
+            echo -e "${YELLOW}Actual:   $actual_checksum${NC}"
+            return 1
+        fi
+    else
+        echo -e "${YELLOW}⚠ Could not download official checksums${NC}"
+        if [ -n "$local_checksum" ]; then
+            echo -e "${YELLOW}⚠ Falling back to local checksum verification only${NC}"
+            return 0
+        else
+            echo -e "${RED}✗ No checksum verification possible!${NC}"
+            return 1
+        fi
+    fi
+}
+
+if ! verify_iso_checksum "$ISO_PATH" "$ISO_DIR/sha256sums.txt" "$ISO_NAME" "$ISO_URL"; then
     exit 1
 fi
-echo -e "${GREEN}ISO verified successfully${NC}"
-echo -e "${YELLOW}ISO integrity verification is currently disabled due to a known sha256sum issue.${NC}"
-# Automated verification temporarily disabled due to sha256sum bug:
-# if ! sha256sum -c "$ISO_DIR/sha256sums.txt" --ignore-missing "$ISO_PATH" >/dev/null 2>&1; then
 #     echo -e "${RED}Error: ISO verification failed${NC}"
 #     exit 1
 # fi
@@ -147,21 +233,15 @@ echo -e "${YELLOW}Unmounting USB device...${NC}"
 umount ${USB_DEVICE}* 2>/dev/null || true
 sleep 1
 
-# Partition the USB device
-echo -e "${YELLOW}Partitioning USB device...${NC}"
-parted -s "$USB_DEVICE" mklabel msdos
-if ! parted -s "$USB_DEVICE" mkpart primary fat32 1MiB ${ISO_PARTITION_SIZE_MB}MiB; then
-    echo -e "${RED}Error: Failed to create ISO partition${NC}"
+# Install Ventoy on USB
+echo -e "${YELLOW}Installing Ventoy on USB...${NC}"
+cd "$VENTOY_DIR"
+if ! ./Ventoy2Disk.sh -i "$USB_DEVICE"; then
+    echo -e "${RED}Error: Failed to install Ventoy${NC}"
     exit 1
 fi
-if ! parted -s "$USB_DEVICE" mkpart primary fat32 ${ISO_PARTITION_SIZE_MB}MiB 100%; then
-    echo -e "${RED}Error: Failed to create config partition${NC}"
-    exit 1
-fi
-if ! parted -s "$USB_DEVICE" set 1 boot on; then
-    echo -e "${RED}Error: Failed to set boot flag${NC}"
-    exit 1
-fi
+cd ..
+echo -e "${GREEN}Ventoy installed successfully${NC}"
 
 # Wait for partitions to be recognized
 echo -e "${YELLOW}Syncing and waiting for partitions...${NC}"
@@ -170,127 +250,17 @@ sleep 3
 partprobe "$USB_DEVICE" 2>/dev/null || true
 sleep 2
 
-# Format the ISO partition
-echo -e "${YELLOW}Formatting ISO partition as FAT32...${NC}"
-if ! mkfs.vfat -F 32 "${USB_DEVICE}1" -n ARCHISO; then
-    echo -e "${RED}Error: Failed to format ISO partition${NC}"
-    exit 1
-fi
+# Mount Ventoy data partition (usually the larger one)
+VENTOY_PARTITION="${USB_DEVICE}1"
+echo -e "${GREEN}Using Ventoy data partition: $VENTOY_PARTITION${NC}"
 
-# Wait for formatting to complete
-sync
-sleep 2
-
-# Mount the ISO partition and extract contents
-echo -e "${YELLOW}Extracting ISO contents to USB partition (this will take 5-10 minutes)...${NC}"
-ISO_MOUNT=$(mktemp -d)
-USB_MOUNT=$(mktemp -d)
-
-# Mount the ISO
-if ! mount -o loop,ro "$ISO_PATH" "$ISO_MOUNT"; then
-    echo -e "${RED}Error: Failed to mount ISO${NC}"
-    rmdir "$ISO_MOUNT" "$USB_MOUNT"
-    exit 1
-fi
-
-# Mount the USB partition
-sleep 2
-partprobe "$USB_DEVICE" 2>/dev/null || true
-sleep 1
-if ! mount "${USB_DEVICE}1" "$USB_MOUNT"; then
-    echo -e "${RED}Error: Failed to mount USB partition${NC}"
-    umount "$ISO_MOUNT" || true
-    rmdir "$ISO_MOUNT" "$USB_MOUNT"
-    exit 1
-fi
-
-# Copy all files from ISO to USB
-echo -e "${YELLOW}Copying files (this may take several minutes)...${NC}"
-if ! cp -a "$ISO_MOUNT/"* "$USB_MOUNT/"; then
-    echo -e "${RED}Error: Failed to copy ISO contents${NC}"
-    umount "$ISO_MOUNT" "$USB_MOUNT" || true
-    rmdir "$ISO_MOUNT" "$USB_MOUNT"
-    exit 1
-fi
-
-# Unmount and clean up
-echo -e "${YELLOW}Syncing data...${NC}"
-sync
-umount "$ISO_MOUNT"
-umount "$USB_MOUNT"
-rmdir "$ISO_MOUNT" "$USB_MOUNT"
-
-# Verify bootloader files were copied
-echo -e "${YELLOW}Verifying bootloader files...${NC}"
-USB_VERIFY_MOUNT=$(mktemp -d)
-if ! mount "${USB_DEVICE}1" "$USB_VERIFY_MOUNT"; then
-    echo -e "${RED}Warning: Could not verify ISO partition contents${NC}"
-else
-    # Check for essential boot files (Arch ISO structure)
-    # The Arch ISO typically has /arch (boot files) and either:
-    # - /boot/syslinux (for BIOS boot)
-    # - /EFI (for UEFI boot)
-    # - /loader (for systemd-boot)
-    BOOT_FILES_OK=true
-    if [ ! -d "$USB_VERIFY_MOUNT/arch" ]; then
-        echo -e "${RED}Error: Missing /arch directory (core Arch ISO files)${NC}"
-        BOOT_FILES_OK=false
-    fi
-    if [ ! -d "$USB_VERIFY_MOUNT/boot" ] && [ ! -d "$USB_VERIFY_MOUNT/EFI" ]; then
-        echo -e "${RED}Error: Missing both /boot and /EFI directories${NC}"
-        BOOT_FILES_OK=false
-    fi
-    # Check for at least one bootloader configuration
-    if [ ! -f "$USB_VERIFY_MOUNT/boot/syslinux/syslinux.cfg" ] && \
-       [ ! -d "$USB_VERIFY_MOUNT/EFI" ] && \
-       [ ! -d "$USB_VERIFY_MOUNT/loader" ]; then
-        echo -e "${YELLOW}Warning: No recognized bootloader configuration found${NC}"
-        echo -e "${YELLOW}Expected: syslinux.cfg, EFI/, or loader/ directory${NC}"
-    fi
-
-    if [ "$BOOT_FILES_OK" = true ]; then
-        echo -e "${GREEN}Bootloader files verified successfully${NC}"
-    else
-        umount "$USB_VERIFY_MOUNT"
-        rmdir "$USB_VERIFY_MOUNT"
-        echo -e "${RED}Error: USB may not be bootable - essential files missing${NC}"
-        exit 1
-    fi
-
-    umount "$USB_VERIFY_MOUNT"
-    rmdir "$USB_VERIFY_MOUNT"
-fi
-
-# Wait for kernel to recognize the filesystem
-echo ""
-echo -e "${YELLOW}Syncing and waiting for device...${NC}"
-sync
-sleep 3
-partprobe "$USB_DEVICE" 2>/dev/null || true
-sleep 2
-
-# Format the config partition
-echo -e "${YELLOW}Formatting config partition as FAT...${NC}"
-if ! mkfs.vfat "${USB_DEVICE}2" -n CONFIGS; then
-    echo -e "${RED}Error: Failed to format config partition${NC}"
-    exit 1
-fi
-
-# Wait for formatting to complete
-sync
-sleep 2
-
-# Mount the config partition
-CONFIG_PARTITION="${USB_DEVICE}2"
-echo -e "${GREEN}Using config partition: $CONFIG_PARTITION${NC}"
-
-echo -e "${YELLOW}Mounting config partition...${NC}"
-MOUNT_POINT=$(mktemp -d)
+echo -e "${YELLOW}Mounting Ventoy partition...${NC}"
+VENTOY_MOUNT=$(mktemp -d)
 sleep 2
 
 # Try mounting with retries
 for i in {1..5}; do
-    if mount "$CONFIG_PARTITION" "$MOUNT_POINT" 2>/dev/null; then
+    if mount "$VENTOY_PARTITION" "$VENTOY_MOUNT" 2>/dev/null; then
         echo -e "${GREEN}Mounted successfully on attempt $i${NC}"
         break
     fi
@@ -300,20 +270,29 @@ for i in {1..5}; do
     sleep 1
 done
 
-if ! mountpoint -q "$MOUNT_POINT"; then
-    echo -e "${RED}Error: Failed to mount config partition after 5 attempts${NC}"
+if ! mountpoint -q "$VENTOY_MOUNT"; then
+    echo -e "${RED}Error: Failed to mount Ventoy partition after 5 attempts${NC}"
     echo -e "${YELLOW}Troubleshooting:${NC}"
     echo "1. Check partition table: fdisk -l $USB_DEVICE"
-    echo "2. Verify filesystem: fsck.vfat $CONFIG_PARTITION"
-    echo "3. Try manual mount: mount $CONFIG_PARTITION /mnt"
+    echo "2. Verify filesystem: fsck.exfat $VENTOY_PARTITION"
+    echo "3. Try manual mount: mount $VENTOY_PARTITION /mnt"
     exit 1
 fi
 
 echo -e "${GREEN}Mounted successfully${NC}"
 
+# Copy ISO to Ventoy partition
+echo -e "${YELLOW}Copying ISO to Ventoy partition...${NC}"
+if ! cp "$ISO_PATH" "$VENTOY_MOUNT/"; then
+    echo -e "${RED}Error: Failed to copy ISO${NC}"
+    umount "$VENTOY_MOUNT" || true
+    rmdir "$VENTOY_MOUNT"
+    exit 1
+fi
+
 # Create config directory on USB
 echo -e "${YELLOW}Creating configuration directory...${NC}"
-CONFIG_USB_DIR="$MOUNT_POINT/archinstall"
+CONFIG_USB_DIR="$VENTOY_MOUNT/configs"
 mkdir -p "$CONFIG_USB_DIR"
 
 # Copy configuration files
@@ -323,6 +302,11 @@ for file in "$CONFIG_DIR"/*; do
         cp -v "$file" "$CONFIG_USB_DIR"/
     fi
 done
+
+# Copy local config if exists
+if [ -f "local-config.toml" ]; then
+    cp -v "local-config.toml" "$CONFIG_USB_DIR"/
+fi
 
 # Make scripts executable
 echo -e "${YELLOW}Setting permissions...${NC}"
@@ -344,12 +328,13 @@ cat > "$CONFIG_USB_DIR/QUICKSTART.txt" << 'EOF'
 ARCH LINUX AUTOMATED INSTALLER - QUICK START
 ==============================================
 
-1. Boot from this USB drive
-2. Once in the Arch live environment, run:
+1. Boot from this USB drive (Ventoy menu will appear)
+2. Select the Arch Linux ISO
+3. Once in the Arch live environment, run:
 
    mkdir -p /root/archconfig
-   mount /dev/disk/by-label/CONFIGS /mnt
-   cp /mnt/archinstall/* /root/archconfig/
+   mount /dev/sdb1 /mnt  # Mount the Ventoy data partition
+   cp /mnt/configs/* /root/archconfig/
    umount /mnt
 
    # IMPORTANT: Edit config to set encryption password
@@ -359,14 +344,14 @@ ARCH LINUX AUTOMATED INSTALLER - QUICK START
    # Run installer
    archinstall --config /root/archconfig/archinstall-config.json
 
-3. After installation and reboot:
+4. After installation and reboot:
    - Login as: kang
    - Password: changeme123 (you'll be forced to change it)
 
-4. Complete post-installation:
-   sudo bash /path/to/usb/archinstall/post-install.sh
+5. Complete post-installation:
+   sudo bash /path/to/configs/post-install.sh
 
-5. Read README.md for full documentation
+6. Read configs/README.md for full documentation
 
 ==============================================
 EOF
@@ -378,8 +363,8 @@ sync
 sleep 2
 
 echo -e "${YELLOW}Unmounting USB...${NC}"
-umount "$MOUNT_POINT"
-rmdir "$MOUNT_POINT"
+umount "$VENTOY_MOUNT"
+rmdir "$VENTOY_MOUNT"
 
 echo ""
 echo -e "${GREEN}========================================${NC}"
@@ -389,8 +374,9 @@ echo ""
 echo -e "${BLUE}Next steps:${NC}"
 echo "1. Insert USB into target PC"
 echo "2. Enable VT-x, VT-d, and IOMMU in BIOS"
-echo "3. Boot from USB"
-echo "4. Follow instructions in QUICKSTART.txt"
+echo "3. Boot from USB (Ventoy menu will appear)"
+echo "4. Select the Arch Linux ISO"
+echo "5. Follow instructions in configs/QUICKSTART.txt"
 echo ""
 echo -e "${YELLOW}IMPORTANT: You must edit the archinstall-config.json${NC}"
 echo -e "${YELLOW}to set your LUKS encryption password before running!${NC}"
