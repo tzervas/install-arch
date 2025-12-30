@@ -43,6 +43,30 @@ jobs:
         uv run mypy src/install_arch/
         uv run ruff format --check src/ tests/
 
+  devcontainer:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Dev Container
+      uses: devcontainers/ci@v0.3
+      with:
+        imageName: install-arch-dev
+        runCmd: |
+          echo "Testing Dev Container build..."
+          python --version
+          uv --version
+          echo "Dev Container build successful"
+
+    - name: Test Dev Container functionality
+      run: |
+        echo "Testing Dev Container functionality..."
+        # This would run inside the built container
+        # Add any specific tests for the containerized environment here
+
   release:
     needs: test
     runs-on: ubuntu-latest

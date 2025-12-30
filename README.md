@@ -47,6 +47,32 @@ code .
 # Click "Reopen in Container" when prompted
 ```
 
+#### Dev Container Automation
+
+The project includes comprehensive automation for managing the Dev Container environment:
+
+```bash
+# Using Make commands
+make build          # Build the Dev Container image
+make rebuild        # Rebuild without cache
+make clean          # Clean up unused resources
+make update         # Update dependencies inside container
+make status         # Show container status
+
+# Using the CLI tool
+uv run devcontainer-build
+uv run devcontainer-rebuild
+uv run devcontainer-clean
+uv run devcontainer-status
+
+# Using the management script
+./scripts/devcontainer.sh build
+./scripts/devcontainer.sh rebuild
+./scripts/devcontainer.sh clean
+./scripts/devcontainer.sh update
+./scripts/devcontainer.sh status
+```
+
 See [Development Setup](docs/development-setup.md) for detailed instructions on:
 - Package management with uv/poetry/pip/pipenv
 - Secure filesystem operations

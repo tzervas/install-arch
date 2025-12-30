@@ -1,12 +1,9 @@
-{
+ 
+ {
   "name": "install-arch-dev",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-  "features": {
-    "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.13"
-    },
-    "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
   },
   "customizations": {
     "vscode": {
@@ -15,14 +12,21 @@
         "ms-vscode.vscode-json",
         "ms-vscode.makefile-tools",
         "GitHub.copilot",
-        "GitHub.copilot-chat"
+        "GitHub.copilot-chat",
+        "rust-lang.rust-analyzer",
+        "ms-vscode-remote.remote-containers",
+        "ms-vscode.vscode-docker"
       ]
     }
   },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "mounts": [
-    "source=${localWorkspaceFolder}/.git,target=/workspaces/install-arch/.git,type=bind,consistency=cached"
+    "source=${localWorkspaceFolder},target=/workspaces/install-arch,type=bind,consistency=cached",
+    "source=install-arch-dev-cache,target=/home/vscode/.cache,type=volume"
   ],
   "workspaceFolder": "/workspaces/install-arch",
-  "remoteUser": "vscode"
+  "remoteUser": "vscode",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  }
 }

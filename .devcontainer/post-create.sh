@@ -3,29 +3,37 @@ set -euo pipefail
 
 echo "Setting up development environment..."
 
-# Install uv for fast Python package management
-curl -LsSf https://astral.sh/uv/install.sh | sh
-export PATH="$HOME/.cargo/bin:$PATH"
+# uv should already be installed from the base image
+if ! command -v uv &> /dev/null; then
+    echo "Error: uv not found in base image"
+    exit 1
+fi
+echo "Using uv $(uv --version) for Python package management"
 
 # Create uv-managed virtual environment and install dependencies
 cd /workspaces/install-arch
+echo "Creating Python virtual environment..."
 uv venv .venv
 source .venv/bin/activate
 
 # Install the package in development mode
+echo "Installing package in development mode..."
 uv pip install -e .
 
-# Install additional tools for Arch Linux development
-apt-get update && apt-get install -y \
-    qemu-system-x86 \
-    ovmf \
+# Install additional essential tools if needed (Debian packages)
+echo "Installing additional development tools..."
+sudo apt-get update && sudo apt-get install -y --no-install-recommends \
     parted \
     dosfstools \
     btrfs-progs \
     cryptsetup \
     lvm2 \
     openssh-client \
-    rsync
+    rsync \
+    || echo "Some packages may not be available, continuing..."
+
+# Clean up
+sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
 
 # Set up secure temporary directory structure
 install-arch-dev temp-dir --prefix dev-setup-

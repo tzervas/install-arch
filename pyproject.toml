@@ -33,6 +33,10 @@ docs = [
 [project.scripts]
 install-arch-dev = "install_arch.cli:cli"
 local-ci = "install_arch.cli:local_ci"
+devcontainer-build = "install_arch.cli:devcontainer_build"
+devcontainer-rebuild = "install_arch.cli:devcontainer_rebuild"
+devcontainer-clean = "install_arch.cli:devcontainer_clean"
+devcontainer-status = "install_arch.cli:devcontainer_status"
 
 [dependency-groups]
 dev = [
