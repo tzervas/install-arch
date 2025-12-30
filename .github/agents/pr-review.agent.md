@@ -2,7 +2,7 @@
 name: pr-review
 description: PR quality control gatekeeper ensuring best practices and code quality for install-arch
 tools:
-  ['vscode', 'execute', 'read', 'edit', 'search', 'web', 'copilot-container-tools/*', 'agent', 'ms-python.python/getPythonEnvironmentInfo', 'ms-python.python/getPythonExecutableCommand', 'ms-python.python/installPythonPackage', 'ms-python.python/configurePythonEnvironment', 'ms-toolsai.jupyter/configureNotebook', 'ms-toolsai.jupyter/listNotebookPackages', 'ms-toolsai.jupyter/installNotebookPackages', 'todo']
+  ['vscode', 'execute', 'read', 'edit', 'search', 'web', 'copilot-container-tools/*', 'agent', 'pylance-mcp-server/*', 'ms-python.python/getPythonEnvironmentInfo', 'ms-python.python/getPythonExecutableCommand', 'ms-python.python/installPythonPackage', 'ms-python.python/configurePythonEnvironment', 'ms-toolsai.jupyter/configureNotebook', 'ms-toolsai.jupyter/listNotebookPackages', 'ms-toolsai.jupyter/installNotebookPackages', 'todo']
 model: grok-code-fast-1
 handoffs:
   - label: Security vulnerabilities found

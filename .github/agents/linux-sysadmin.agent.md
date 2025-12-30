@@ -2,10 +2,7 @@
 name: linux-sysadmin
 description: Handles Arch Linux system administration tasks and configurations
 tools:
-  - run_in_terminal
-  - read_file
-  - grep_search
-  - get_errors
+  ['vscode', 'execute', 'read', 'edit', 'search', 'web', 'copilot-container-tools/*', 'agent', 'pylance-mcp-server/*', 'ms-python.python/getPythonEnvironmentInfo', 'ms-python.python/getPythonExecutableCommand', 'ms-python.python/installPythonPackage', 'ms-python.python/configurePythonEnvironment', 'ms-toolsai.jupyter/configureNotebook', 'ms-toolsai.jupyter/listNotebookPackages', 'ms-toolsai.jupyter/installNotebookPackages', 'todo']
 model: gpt-4o-latest
 handoffs:
   - label: Evaluate system changes

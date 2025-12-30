@@ -41,6 +41,143 @@ if [ -n "$XDG_CURRENT_DESKTOP" ] && [[ "$XDG_CURRENT_DESKTOP" == *"KDE"* ]]; the
 ScaleFactor=1
 ScreenScaleFactors=
 EOF
+
+    # Set up KDE Plasma desktop experience
+    echo "Configuring KDE Plasma desktop experience..."
+
+    # Set default wallpaper
+    mkdir -p "$HOME/.local/share/wallpapers"
+    # Use a default wallpaper if available, or set a solid color
+    kwriteconfig5 --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" --group "Containments" --group "1" --group "Wallpaper" --group "org.kde.image" --group "General" --key "Image" "file:///usr/share/wallpapers/Next/contents/images/1920x1080.jpg"
+    kwriteconfig5 --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" --group "Containments" --group "1" --group "Wallpaper" --group "org.kde.image" --group "General" --key "FillMode" "2"
+
+    # Configure panel layout and widgets
+    # Reset panel to default simple layout
+    kwriteconfig5 --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" --group "Containments" --group "2" --key "activityId" ""
+    kwriteconfig5 --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" --group "Containments" --group "2" --key "formfactor" "2"
+    kwriteconfig5 --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" --group "Containments" --group "2" --key "immutability" "1"
+    kwriteconfig5 --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" --group "Containments" --group "2" --key "lastScreen" "0"
+    kwriteconfig5 --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" --group "Containments" --group "2" --key "location" "4"
+    kwriteconfig5 --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" --group "Containments" --group "2" --key "plugin" "org.kde.panel"
+
+    # Add essential widgets to panel
+    # Application launcher
+    kwriteconfig5 --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" --group "Containments" --group "2" --group "Applets" --group "3" --key "immutability" "1"
+    kwriteconfig5 --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" --group "Containments" --group "2" --group "Applets" --group "3" --key "plugin" "org.kde.plasma.kickoff"
+
+    # Task manager
+    kwriteconfig5 --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" --group "Containments" --group "2" --group "Applets" --group "4" --key "immutability" "1"
+    kwriteconfig5 --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" --group "Containments" --group "2" --group "Applets" --group "4" --key "plugin" "org.kde.plasma.taskmanager"
+
+    # System tray
+    kwriteconfig5 --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" --group "Containments" --group "2" --group "Applets" --group "5" --key "immutability" "1"
+    kwriteconfig5 --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" --group "Containments" --group "2" --group "Applets" --group "5" --key "plugin" "org.kde.plasma.systemtray"
+
+    # Digital clock
+    kwriteconfig5 --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" --group "Containments" --group "2" --group "Applets" --group "6" --key "immutability" "1"
+    kwriteconfig5 --file "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc" --group "Containments" --group "2" --group "Applets" --group "6" --key "plugin" "org.kde.plasma.digitalclock"
+
+    # Set up keyboard shortcuts
+    # Terminal shortcut (Ctrl+Alt+T)
+    kwriteconfig5 --file "$HOME/.config/kglobalshortcutsrc" --group "konsole" --group "org.kde.konsole.desktop" --key "_launch" "Ctrl+Alt+T\tCtrl+Alt+T\tLaunch Konsole"
+
+    # File manager shortcut (Super+E)
+    kwriteconfig5 --file "$HOME/.config/kglobalshortcutsrc" --group "dolphin" --group "org.kde.dolphin.desktop" --key "_launch" "Meta+E\tMeta+E\tLaunch Dolphin"
+
+    # Browser shortcut (Super+W)
+    kwriteconfig5 --file "$HOME/.config/kglobalshortcutsrc" --group "firefox" --group "firefox.desktop" --key "_launch" "Meta+W\tMeta+W\tLaunch Firefox"
+
+    # System settings shortcut (Super+I)
+    kwriteconfig5 --file "$HOME/.config/kglobalshortcutsrc" --group "systemsettings" --group "systemsettings.desktop" --key "_launch" "Meta+I\tMeta+I\tLaunch System Settings"
+
+    # Configure power management profiles
+    # Set balanced power profile
+    kwriteconfig5 --file "$HOME/.config/powerdevilrc" --group "AC" --group "DimDisplay" --key "idleTime" "300000"
+    kwriteconfig5 --file "$HOME/.config/powerdevilrc" --group "AC" --group "DPMSControl" --key "idleTime" "600000"
+    kwriteconfig5 --file "$HOME/.config/powerdevilrc" --group "AC" --group "HandleButtonEvents" --key "lidAction" "1"
+    kwriteconfig5 --file "$HOME/.config/powerdevilrc" --group "AC" --group "HandleButtonEvents" --key "powerButtonAction" "16"
+    kwriteconfig5 --file "$HOME/.config/powerdevilrc" --group "Battery" --group "DimDisplay" --key "idleTime" "120000"
+    kwriteconfig5 --file "$HOME/.config/powerdevilrc" --group "Battery" --group "DPMSControl" --key "idleTime" "300000"
+    kwriteconfig5 --file "$HOME/.config/powerdevilrc" --group "Battery" --group "HandleButtonEvents" --key "lidAction" "1"
+    kwriteconfig5 --file "$HOME/.config/powerdevilrc" --group "Battery" --group "HandleButtonEvents" --key "powerButtonAction" "16"
+
+    # Set up file associations
+    mkdir -p "$HOME/.config"
+    cat > "$HOME/.config/mimeapps.list" << 'EOF'
+[Default Applications]
+text/plain=org.kde.kate.desktop
+text/html=firefox.desktop
+image/jpeg=org.kde.gwenview.desktop
+image/png=org.kde.gwenview.desktop
+application/pdf=org.kde.okular.desktop
+application/x-shellscript=org.kde.kate.desktop
+inode/directory=org.kde.dolphin.desktop
+EOF
+
+    # Create helpful desktop shortcuts
+    mkdir -p "$HOME/Desktop"
+
+    # Terminal shortcut
+    cat > "$HOME/Desktop/Terminal.desktop" << 'EOF'
+[Desktop Entry]
+Name=Terminal
+Comment=Open a terminal window
+Exec=konsole
+Icon=utilities-terminal
+Type=Application
+Categories=System;TerminalEmulator;
+EOF
+    chmod +x "$HOME/Desktop/Terminal.desktop"
+
+    # File Manager shortcut
+    cat > "$HOME/Desktop/Files.desktop" << 'EOF'
+[Desktop Entry]
+Name=Files
+Comment=Open file manager
+Exec=dolphin
+Icon=system-file-manager
+Type=Application
+Categories=Utility;FileManager;
+EOF
+    chmod +x "$HOME/Desktop/Files.desktop"
+
+    # Browser shortcut
+    cat > "$HOME/Desktop/Browser.desktop" << 'EOF'
+[Desktop Entry]
+Name=Web Browser
+Comment=Open web browser
+Exec=firefox
+Icon=web-browser
+Type=Application
+Categories=Network;WebBrowser;
+EOF
+    chmod +x "$HOME/Desktop/Browser.desktop"
+
+    # System Monitor shortcut
+    cat > "$HOME/Desktop/System Monitor.desktop" << 'EOF'
+[Desktop Entry]
+Name=System Monitor
+Comment=Monitor system resources
+Exec=plasma-systemmonitor
+Icon=utilities-system-monitor
+Type=Application
+Categories=System;Monitor;
+EOF
+    chmod +x "$HOME/Desktop/System Monitor.desktop"
+
+    # Settings shortcut
+    cat > "$HOME/Desktop/Settings.desktop" << 'EOF'
+[Desktop Entry]
+Name=System Settings
+Comment=Configure system settings
+Exec=systemsettings
+Icon=preferences-system
+Type=Application
+Categories=Settings;
+EOF
+    chmod +x "$HOME/Desktop/Settings.desktop"
+
+    echo "KDE Plasma desktop configuration complete."
 fi
 
 # Create a helper script for monitor setup

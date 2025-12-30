@@ -76,6 +76,33 @@ Key validations:
 3. **Encryption Issues**: Validate recovery procedures
 4. **Filesystem Corruption**: Test BTRFS repair tools
 
+## KDE Plasma Desktop Validation
+
+For installations with KDE Plasma desktop environment, use the comprehensive validation suite:
+
+### Automated KDE Validation
+```bash
+# Run full KDE validation suite
+./scripts/run-full-validation.sh
+
+# Individual test components
+./scripts/validate-package-installation.sh  # Package verification
+./scripts/validate-services.sh              # Service configuration
+./scripts/validate-kde-desktop.sh           # KDE environment
+./scripts/validate-security.sh              # Security hardening
+./scripts/validate-applications.sh          # Application functionality
+./scripts/validate-hardware.sh              # Hardware/drivers
+```
+
+### KDE-Specific Test Cases
+- **Desktop Environment**: Plasma shell, KWin, KDE services
+- **Application Integration**: KDE applications, shortcuts, themes
+- **Security**: Firewall, SSH hardening, password policies
+- **User Experience**: Desktop configuration, panel widgets, notifications
+- **Hardware**: NVIDIA drivers, multi-monitor, audio, Bluetooth
+
+See [KDE Installation Validation](kde-installation-validation.md) for detailed procedures.
+
 ## Performance Benchmarks
 
 - Boot time: < 30 seconds
