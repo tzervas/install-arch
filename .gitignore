@@ -106,4 +106,8 @@ terraform.tfstate.backup
 
 # Temporary directories
 tmp/
-temp/
+temp/local-config.toml
+
+# Local configuration files (sensitive data)
+local-config.toml
+BLACKWELL_STATION_README.md
