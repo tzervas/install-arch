@@ -111,3 +111,7 @@ temp/local-config.toml
 # Local configuration files (sensitive data)
 local-config.toml
 BLACKWELL_STATION_README.md
+
+# Ventoy bootloader (downloaded at runtime)
+ventoy-*
+Ventoy*
