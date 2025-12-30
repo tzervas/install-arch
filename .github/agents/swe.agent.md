@@ -1,22 +1,24 @@
 ---
 name: swe
 description: Handles software development tasks, code implementation, and engineering
+icon: "💻"
 tools:
-  ['vscode', 'execute', 'read', 'edit', 'search', 'web', 'copilot-container-tools/*', 'agent', 'pylance-mcp-server/*', 'ms-python.python/getPythonEnvironmentInfo', 'ms-python.python/getPythonExecutableCommand', 'ms-python.python/installPythonPackage', 'ms-python.python/configurePythonEnvironment', 'ms-toolsai.jupyter/configureNotebook', 'ms-toolsai.jupyter/listNotebookPackages', 'ms-toolsai.jupyter/installNotebookPackages', 'todo']
+  - search
+  - code_search
+  - edit_file
+  - terminal
+  - fetch
 model: gpt-4o-latest
 handoffs:
   - label: System administration tasks
     agent: linux-sysadmin
     prompt: This development task requires system-level changes
-    send: false
   - label: Security review
     agent: security
     prompt: Code changes need security evaluation
-    send: false
   - label: Testing coordination
     agent: testing
     prompt: Development work ready for testing
-    send: false
   - label: Documentation update
     agent: documentation
     prompt: Code changes require documentation updates

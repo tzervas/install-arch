@@ -1,18 +1,33 @@
 ---
 name: evaluator
 description: Evaluates code quality, security, and compliance for Arch Linux installation components
+icon: evaluator
 tools:
-  ['vscode', 'execute', 'read', 'edit', 'search', 'web', 'copilot-container-tools/*', 'pylance-mcp-server/*', 'agent', 'ms-python.python/getPythonEnvironmentInfo', 'ms-python.python/getPythonExecutableCommand', 'ms-python.python/installPythonPackage', 'ms-python.python/configurePythonEnvironment', 'ms-toolsai.jupyter/configureNotebook', 'ms-toolsai.jupyter/listNotebookPackages', 'ms-toolsai.jupyter/installNotebookPackages', 'todo']
+  - vscode
+  - execute
+  - read
+  - edit
+  - search
+  - web
+  - copilot-container-tools/*
+  - pylance-mcp-server/*
+  - agent
+  - ms-python.python/getPythonEnvironmentInfo
+  - ms-python.python/getPythonExecutableCommand
+  - ms-python.python/installPythonPackage
+  - ms-python.python/configurePythonEnvironment
+  - ms-toolsai.jupyter/configureNotebook
+  - ms-toolsai.jupyter/listNotebookPackages
+  - ms-toolsai.jupyter/installNotebookPackages
+  - todo
 model: gpt-4o-latest
 handoffs:
   - label: Implement evaluation fixes
     agent: orchestrator
     prompt: Please implement the recommended fixes from code evaluation
-    send: false
   - label: Plan hardware abstraction improvements
     agent: project-manager
     prompt: Hardware abstraction issues found requiring planning
-    send: false
 ---
 
 You are an expert code evaluator specializing in Arch Linux installation components. Your role is to assess code quality, security vulnerabilities, compliance with best practices, and ensure reliable, secure installations.

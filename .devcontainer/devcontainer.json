@@ -1,15 +1,15 @@
- 
 {
   "name": "install-arch-dev",
+  "initializeCommand": "bash .devcontainer/load-env.sh",
   "build": {
     "dockerfile": "Dockerfile",
     "context": "..",
     "args": {
-      "MODE": "mount",
-      "BRANCH": "main",
-      "DEPTH": "full",
-      "VERSION": "latest",
-      "REPO_URL": "https://github.com/spooky/install-arch.git"
+      "MODE": "${localEnv:DEVCONTAINER_MODE}",
+      "BRANCH": "${localEnv:DEVCONTAINER_BRANCH}",
+      "DEPTH": "${localEnv:DEVCONTAINER_DEPTH}",
+      "VERSION": "${localEnv:DEVCONTAINER_VERSION}",
+      "REPO_URL": "${localEnv:DEVCONTAINER_REPO_URL}"
     }
   },
   "customizations": {
@@ -28,13 +28,13 @@
   },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "mounts": [
-    "source=${localWorkspaceFolder},target=/workspaces/install-arch,type=bind,consistency=cached",
     "source=install-arch-dev-cache,target=/home/vscode/.cache,type=volume"
   ],
   "workspaceFolder": "/workspaces/install-arch",
   "remoteUser": "vscode",
   "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "moby": false
+    }
   }
-}
 }

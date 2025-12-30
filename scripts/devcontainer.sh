@@ -7,6 +7,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
+# Load configuration
+source "$SCRIPT_DIR/config.sh"
+
 # Debug mode
 DEBUG=${DEBUG:-false}
 
@@ -74,11 +77,11 @@ build() {
     fi
 
     # Check Docker Hub connectivity
-    debug "Checking GitHub Container Registry connectivity..."
-    if curl -s --connect-timeout 5 https://index.docker.io/v2/ > /dev/null 2>&1; then
-        debug "GHCR is reachable"
+    debug "Checking Docker Registry connectivity..."
+    if curl -s --connect-timeout 5 "${INSTALL_ARCH_NETWORK_DOCKER_REGISTRY_URL}" > /dev/null 2>&1; then
+        debug "Docker Registry is reachable"
     else
-        debug "GHCR is not reachable - this may cause auth issues"
+        debug "Docker Registry is not reachable - this may cause auth issues"
     fi
 
     debug "Running docker build command..."

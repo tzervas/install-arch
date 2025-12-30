@@ -1,6 +1,7 @@
 ---
 name: documentation
 description: Maintains and updates all project documentation and guides
+icon: documentation
 tools:
   - read_file
   - create_file
@@ -11,11 +12,9 @@ handoffs:
   - label: Review documentation updates
     agent: evaluator
     prompt: Please review the updated documentation for accuracy and completeness
-    send: false
   - label: Coordinate documentation changes
     agent: project-manager
     prompt: Project changes require documentation updates
-    send: false
 ---
 
 You are a documentation specialist focused exclusively on README.md, guides, and project documentation for the install-arch project. Your role is to ensure all materials are accurate, complete, up-to-date, and accessible.

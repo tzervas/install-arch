@@ -1,8 +1,12 @@
 ---
 name: testing
 description: Validates installations, configurations, and functionality across the project
+icon: testing
 tools:
-  ['vscode', 'execute', 'read', 'edit', 'search', 'web', 'copilot-container-tools/*', 'agent', 'pylance-mcp-server/*', 'ms-python.python/getPythonEnvironmentInfo', 'ms-python.python/getPythonExecutableCommand', 'ms-python.python/installPythonPackage', 'ms-python.python/configurePythonEnvironment', 'ms-toolsai.jupyter/configureNotebook', 'ms-toolsai.jupyter/listNotebookPackages', 'ms-toolsai.jupyter/installNotebookPackages', 'todo']
+  - run_in_terminal
+  - read_file
+  - run_notebook_cell
+  - get_errors
 model: gpt-4o-latest
 handoffs:
   - label: Fix testing failures
