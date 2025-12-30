@@ -35,8 +35,8 @@ fi
 
 log "Starting automated Arch Linux installation..."
 info "Test credentials configured:"
-info "  LUKS password: testluks"
-info "  User password: changeme123 (will be forced to change on first login)"
+info "  LUKS password: ${INSTALL_ARCH_LUKS_PASSWORD:-testluks}"
+info "  User password: ${INSTALL_ARCH_USER_PASSWORD:-changeme123} (will be forced to change on first login)"
 
 # Mount config partition (assuming it's the second partition on USB)
 CONFIG_MOUNT="/tmp/archconfig"
@@ -83,8 +83,8 @@ fi
 
 log "Starting archinstall with automated configuration..."
 warning "The installation will start automatically with the configured settings"
-warning "LUKS encryption will be set up with password: testluks"
-warning "User 'kang' will be created with password: changeme123"
+warning "LUKS encryption will be set up with password: ${INSTALL_ARCH_LUKS_PASSWORD:-testluks}"
+warning "User 'kang' will be created with password: ${INSTALL_ARCH_USER_PASSWORD:-changeme123}"
 echo
 read -p "Press Enter to start installation or Ctrl+C to cancel..."
 

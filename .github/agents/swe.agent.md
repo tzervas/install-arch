@@ -3,11 +3,7 @@ name: swe
 description: Handles software development tasks, code implementation, and engineering
 icon: "💻"
 tools:
-  - search
-  - code_search
-  - edit_file
-  - terminal
-  - fetch
+  ['vscode', 'execute', 'read', 'edit', 'search', 'web', 'copilot-container-tools/*', 'agent', 'pylance-mcp-server/*', 'ms-python.python/getPythonEnvironmentInfo', 'ms-python.python/getPythonExecutableCommand', 'ms-python.python/installPythonPackage', 'ms-python.python/configurePythonEnvironment', 'ms-toolsai.jupyter/configureNotebook', 'ms-toolsai.jupyter/listNotebookPackages', 'ms-toolsai.jupyter/installNotebookPackages', 'todo']
 model: gpt-4o-latest
 handoffs:
   - label: System administration tasks

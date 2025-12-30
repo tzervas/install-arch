@@ -65,7 +65,7 @@
                         "type": "primary",
                         "btrfs_encryption": {
                             "encryption": "luks",
-                            "password": "CHANGE_THIS_LUKS_PASSWORD"
+                            "password": "testluks"
                         }
                     },
                     {
@@ -95,7 +95,7 @@
                         "type": "primary",
                         "btrfs_encryption": {
                             "encryption": "luks",
-                            "password": "CHANGE_THIS_LUKS_PASSWORD"
+                            "password": "testluks"
                         }
                     }
                 ],
@@ -230,7 +230,7 @@
     "users": [
         {
             "username": "kang",
-            "password": "CHANGE_THIS_USER_PASSWORD",
+            "password": "changeme123",
             "sudo": true
         }
     ],

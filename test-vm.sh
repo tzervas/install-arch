@@ -37,8 +37,8 @@ echo
 echo "   (The USB configs partition will be auto-mounted at /mnt)"
 echo
 echo "Test credentials:"
-echo "  LUKS password: testluks"
-echo "  User password: changeme123"
+echo "  LUKS password: ${INSTALL_ARCH_LUKS_PASSWORD:-testluks}"
+echo "  User password: ${INSTALL_ARCH_USER_PASSWORD:-changeme123}"
 echo
 echo "Starting VM... (Ctrl+A, X to exit QEMU)"
 echo
