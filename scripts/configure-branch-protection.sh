@@ -14,6 +14,11 @@ for branch in "${BRANCHES[@]}"; do
 
     # JSON payload for branch protection
     PROTECTION_DATA='{
+        "required_status_checks": {
+            "strict": true,
+            "contexts": []
+        },
+        "enforce_admins": true,
         "required_pull_request_reviews": {
             "required_approving_review_count": 1,
             "require_code_owner_reviews": true,
@@ -26,7 +31,7 @@ for branch in "${BRANCHES[@]}"; do
     }'
 
     # Use gh api to set protection
-    if gh api repos/$OWNER/$REPO/branches/$branch/protection -X PUT -H "Accept: application/vnd.github+json" --input - <<< "$PROTECTION_DATA" > /dev/null 2>&1; then
+    if gh api repos/$OWNER/$REPO/branches/$branch/protection -X PUT -H "Accept: application/vnd.github+json" --input - <<< "$PROTECTION_DATA"; then
         echo "✅ Successfully configured protection for $branch"
     else
         echo "❌ Failed to configure protection for $branch"
