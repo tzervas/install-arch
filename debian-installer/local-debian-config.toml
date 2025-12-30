@@ -1,0 +1,120 @@
+# Local Debian Configuration for Blackwell Station
+# This file contains user-specific customizations for Debian 13 installation
+# Generated for install-debian v1.0.0 customized deployment
+
+[system]
+hostname = "blackwell-debian"
+timezone = "America/New_York"
+locale = "en_US.UTF-8"
+keyboard = "us"
+
+[user]
+name = "debian"
+full_name = "Debian Administrator"
+shell = "/bin/bash"
+groups = ["sudo", "docker", "kvm", "libvirt", "adm", "cdrom", "dip", "plugdev", "lpadmin", "lxd", "sambashare"]
+# SSH keys will be added during runtime from secure location
+# ssh_authorized_keys = []  # Populate with actual keys
+
+[hardware]
+cpu_model = "E5-2665 v4"
+cpu_cores_physical = 8
+cpu_threads_total = 16
+memory_gb = 64
+storage_device = "/dev/nvme0n1"
+gpu_primary = "RTX5080"
+gpu_secondary = "Intel UHD Graphics"
+
+[network]
+hostname = "blackwell-debian"
+domain = "local"
+dhcp = true
+ipv6_disabled = false
+# MAC address will be set during VM provisioning
+# mac_address = "xx:xx:xx:xx:xx:xx"
+
+[virtualization]
+kvm_enabled = true
+libvirt_enabled = true
+docker_enabled = true
+nested_virtualization = true
+
+[storage]
+filesystem = "btrfs"
+encryption = "luks"
+boot_partition_size = "1GB"
+root_partition_size = "50GB"
+swap_partition_size = "8GB"
+home_partition_size = "remaining"
+
+[packages]
+desktop_environment = "kde"
+additional_packages = [
+    "curl",
+    "wget",
+    "git",
+    "vim",
+    "htop",
+    "tmux",
+    "openssh-server",
+    "sudo",
+    "ufw",
+    "fail2ban",
+    "apparmor",
+    "apparmor-profiles",
+    "docker.io",
+    "docker-compose",
+    "qemu-kvm",
+    "libvirt-daemon-system",
+    "virt-manager",
+    "bridge-utils",
+    "dnsmasq",
+    "iptables",
+    "btrfs-progs",
+    "snapper",
+    "grub-btrfs",
+    "linux-headers-amd64",
+    "firmware-linux",
+    "firmware-misc-nonfree",
+    "kde-standard",
+    "kde-plasma-desktop",
+    "sddm",
+    "firefox-esr",
+    "chromium",
+    "vlc",
+    "gimp",
+    "libreoffice",
+    "thunderbird",
+    "keepassxc",
+    "synaptic",
+    "gparted"
+]
+
+[security]
+firewall_enabled = true
+fail2ban_enabled = true
+apparmor_enabled = true
+ssh_permit_root = false
+ssh_password_auth = true
+secure_boot = false
+grub_password_enabled = false
+
+[services]
+ssh_enabled = true
+docker_enabled = true
+libvirt_enabled = true
+bluetooth_enabled = false
+cups_enabled = false
+fail2ban_enabled = true
+
+[backup]
+# Backup configuration for /data volume
+backup_server = "192.168.1.170"
+backup_path = "/data/backups"
+snapshot_schedule = "daily"
+
+[monitoring]
+# Basic monitoring setup
+enable_monitoring = true
+log_aggregation = true
+system_metrics = true

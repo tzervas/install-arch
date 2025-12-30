@@ -1,0 +1,114 @@
+# Debian 13 Installer Configuration
+# This file contains all configurable parameters for the Debian 13 automated installer
+# Values can be overridden by environment variables or local-debian-config.toml
+
+# Application settings
+application_name = "install-debian"
+application_version = "1.0.0"
+application_description = "Automated Debian 13 installation with security-first configurations"
+
+# Debian specific settings
+debian_version = "13"
+debian_codename = "trixie"
+debian_iso_version = "13.0.0"
+debian_architecture = "amd64"
+
+# URL configurations
+debian_mirrors = "https://deb.debian.org/debian/ https://mirror.rackspace.com/debian/ https://mirrors.kernel.org/debian/"
+debian_security_mirrors = "https://security.debian.org/debian-security/ https://mirror.rackspace.com/debian-security/"
+debian_cdimage_url = "https://deb.debian.org/debian-cdimage"
+
+# Package configurations
+debian_desktop_environment = "kde"  # Options: kde, gnome, xfce, lxde, none
+debian_additional_packages = [
+    "curl",
+    "wget",
+    "git",
+    "vim",
+    "htop",
+    "tmux",
+    "openssh-server",
+    "sudo",
+    "ufw",
+    "fail2ban",
+    "apparmor",
+    "apparmor-profiles",
+    "docker.io",
+    "docker-compose",
+    "qemu-kvm",
+    "libvirt-daemon-system",
+    "virt-manager",
+    "bridge-utils",
+    "dnsmasq",
+    "iptables",
+    "btrfs-progs",
+    "snapper",
+    "snapper-gui",
+    "grub-btrfs",
+    "linux-headers-amd64",
+    "firmware-linux",
+    "firmware-misc-nonfree"
+]
+
+# Preseed configuration
+preseed_locale = "en_US.UTF-8"
+preseed_language = "en"
+preseed_country = "US"
+preseed_keyboard_layout = "us"
+
+# Network settings
+network_hostname = "debian-host"
+network_domain = ""
+network_configure_ipv6 = false
+network_dhcp = true
+
+# User configuration
+user_name = "debian"
+user_fullname = "Debian User"
+user_password_crypted = false  # Set to true if providing pre-crypted password
+user_shell = "/bin/bash"
+user_groups = ["sudo", "docker", "kvm", "libvirt", "adm", "cdrom", "dip", "plugdev", "lpadmin", "lxd", "sambashare"]
+
+# Disk configuration
+disk_device = "/dev/nvme0n1"
+disk_filesystem = "btrfs"
+disk_encryption = "luks"  # Options: luks, none
+disk_boot_size = "1GB"
+disk_root_size = "50GB"
+disk_swap_size = "8GB"
+disk_home_size = "remaining"
+
+# Bootloader configuration
+bootloader_install = true
+bootloader_device = "/dev/nvme0n1"
+bootloader_secure_boot = false
+
+# Security settings
+security_install_grub_password = false
+security_grub_password = ""
+security_root_password_same = true
+security_ssh_install = true
+security_ssh_permit_root = false
+security_ssh_password_auth = true
+security_firewall_enable = true
+security_fail2ban_enable = true
+security_apparmor_enable = true
+
+# Services configuration
+services_ssh_enable = true
+services_docker_enable = true
+services_libvirt_enable = true
+services_bluetooth_enable = false
+services_cups_enable = false
+services_fail2ban_enable = true
+
+# Post-install configuration
+postinstall_upgrade = true
+postinstall_autoremove = true
+postinstall_reboot = true
+postinstall_poweroff = false
+
+# Advanced options
+advanced_expert_mode = false
+advanced_priority = "normal"  # Options: low, normal, critical, high
+advanced_bootloader_menu_delay = "5"
