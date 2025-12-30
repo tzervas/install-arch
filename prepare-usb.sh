@@ -62,7 +62,7 @@ echo ""
 
 # Check if running as root
 if [[ $EUID -ne 0 ]]; then
-   echo -e "${RED}Error: This script must be run as root${NC}" 
+   echo -e "${RED}Error: This script must be run as root${NC}"
    echo "Usage: sudo $0"
    exit 1
 fi
@@ -79,7 +79,7 @@ if [ ! -f "$ISO_PATH" ]; then
         echo -e "${RED}Error: Neither wget nor curl found. Please install one to download the ISO.${NC}"
         exit 1
     fi
-    
+
     if [ ! -f "$ISO_PATH" ]; then
         echo -e "${RED}Error: Failed to download ISO${NC}"
         exit 1
@@ -226,20 +226,28 @@ USB_VERIFY_MOUNT=$(mktemp -d)
 if ! mount "${USB_DEVICE}1" "$USB_VERIFY_MOUNT"; then
     echo -e "${RED}Warning: Could not verify ISO partition contents${NC}"
 else
-    # Check for essential boot files
+    # Check for essential boot files (Arch ISO structure)
+    # The Arch ISO typically has /arch (boot files) and either:
+    # - /boot/syslinux (for BIOS boot)
+    # - /EFI (for UEFI boot)
+    # - /loader (for systemd-boot)
     BOOT_FILES_OK=true
     if [ ! -d "$USB_VERIFY_MOUNT/arch" ]; then
-        echo -e "${RED}Error: Missing /arch directory${NC}"
+        echo -e "${RED}Error: Missing /arch directory (core Arch ISO files)${NC}"
         BOOT_FILES_OK=false
     fi
-    if [ ! -d "$USB_VERIFY_MOUNT/boot" ]; then
-        echo -e "${RED}Error: Missing /boot directory${NC}"
+    if [ ! -d "$USB_VERIFY_MOUNT/boot" ] && [ ! -d "$USB_VERIFY_MOUNT/EFI" ]; then
+        echo -e "${RED}Error: Missing both /boot and /EFI directories${NC}"
         BOOT_FILES_OK=false
     fi
-    if [ ! -f "$USB_VERIFY_MOUNT/boot/syslinux/syslinux.cfg" ] && [ ! -d "$USB_VERIFY_MOUNT/EFI" ]; then
-        echo -e "${YELLOW}Warning: Boot configuration may be incomplete${NC}"
+    # Check for at least one bootloader configuration
+    if [ ! -f "$USB_VERIFY_MOUNT/boot/syslinux/syslinux.cfg" ] && \
+       [ ! -d "$USB_VERIFY_MOUNT/EFI" ] && \
+       [ ! -d "$USB_VERIFY_MOUNT/loader" ]; then
+        echo -e "${YELLOW}Warning: No recognized bootloader configuration found${NC}"
+        echo -e "${YELLOW}Expected: syslinux.cfg, EFI/, or loader/ directory${NC}"
     fi
-    
+
     if [ "$BOOT_FILES_OK" = true ]; then
         echo -e "${GREEN}Bootloader files verified successfully${NC}"
     else
@@ -248,7 +256,7 @@ else
         echo -e "${RED}Error: USB may not be bootable - essential files missing${NC}"
         exit 1
     fi
-    
+
     umount "$USB_VERIFY_MOUNT"
     rmdir "$USB_VERIFY_MOUNT"
 fi
@@ -343,21 +351,21 @@ ARCH LINUX AUTOMATED INSTALLER - QUICK START
    mount /dev/disk/by-label/CONFIGS /mnt
    cp /mnt/archinstall/* /root/archconfig/
    umount /mnt
-   
+
    # IMPORTANT: Edit config to set encryption password
    nano /root/archconfig/archinstall-config.json
    # Search for "password": "" and add your password
-   
+
    # Run installer
    archinstall --config /root/archconfig/archinstall-config.json
 
 3. After installation and reboot:
    - Login as: kang
    - Password: changeme123 (you'll be forced to change it)
-   
+
 4. Complete post-installation:
    sudo bash /path/to/usb/archinstall/post-install.sh
-   
+
 5. Read README.md for full documentation
 
 ==============================================
