@@ -2,6 +2,57 @@
 
 This project contains a complete automated installation system for Arch Linux configured as a high-performance virtualization host.
 
+## Development Workflow
+
+This project uses automated quality checks to ensure code consistency and catch issues early.
+
+### Pre-commit Hooks
+
+Pre-commit hooks run automatically on every commit to enforce:
+- Guardrails compliance
+- Test execution
+- Code quality (ruff)
+- Type checking (mypy)
+
+```bash
+# Install pre-commit hooks
+pre-commit install
+
+# Run all checks manually
+pre-commit run --all-files
+```
+
+### Local CI Checks
+
+Run the same checks that execute in CI pipelines locally:
+
+```bash
+# Using the CLI command
+uv run python -m install_arch.cli local-ci
+
+# Or using the script
+./scripts/run-local-ci.sh
+
+# Quick test run only
+uv run pytest tests/ -x --tb=short
+```
+
+### Development Environment
+
+For development work requiring additional packages or tools, use the devcontainer environment:
+
+```bash
+# Open in VS Code devcontainer
+code .
+# Click "Reopen in Container" when prompted
+```
+
+See [Development Setup](docs/development-setup.md) for detailed instructions on:
+- Package management with uv/poetry/pip/pipenv
+- Secure filesystem operations
+- Guardrails compliance
+- Multi-tool parameterization
+
 ## Project Structure
 
 ```
@@ -36,11 +87,11 @@ install-arch/
    ```bash
    # In Arch live environment
    mkdir -p /root/archconfig
-   mount /dev/disk/by-label/ARCH_* /mnt
-   cp -r /mnt/archinstall /root/archconfig
+   mount /dev/disk/by-label/CONFIGS /mnt
+   cp /mnt/archinstall/* /root/archconfig/
    umount /mnt
 
-   cd /root/archconfig/archinstall
+   cd /root/archconfig
    ./configure-installer.sh  # Set LUKS password
 
    archinstall --config archinstall-config.json
@@ -54,6 +105,21 @@ install-arch/
 - **Desktop**: KDE Plasma with multi-monitor support
 - **Virtualization**: KVM/QEMU with PCIe passthrough ready
 - **Security**: Read-only root filesystem, forced password change
+
+## Hardware Compatibility Matrix
+
+| CPU Model | GPU Model | Status | Notes |
+|-----------|-----------|--------|-------|
+| Intel 14700K | RTX 5080 | ✅ Fully Supported | Primary development platform |
+| Intel 14700K | RTX 4070 | ✅ Supported | Tested passthrough configuration |
+| E5-2665 v4 | RTX 5080 | ⚠️ Limited Support | Requires kernel parameter adjustments |
+| E5-2665 v4 | Quadro P4000 | ✅ Supported | Enterprise GPU configuration |
+
+**Compatibility Notes**:
+- All configurations require VT-x/VT-d and IOMMU enabled in BIOS
+- TPM 2.0 integration available for supported CPUs
+- PCIe passthrough tested on all listed combinations
+- BTRFS snapshots verified on all hardware
 
 ## Features
 
@@ -69,6 +135,27 @@ install-arch/
 ## Documentation
 
 See [GETTING_STARTED.md](GETTING_STARTED.md) for complete installation and usage instructions.
+
+## Copilot Integration
+
+This project includes comprehensive GitHub Copilot customization for enhanced development experience:
+
+- **Repository Instructions** (`.github/copilot-instructions.md`): Global coding guidelines
+- **Path-Specific Instructions** (`.github/instructions/`): Context-aware rules for scripts/configs
+- **Custom Agents** (`.github/agents/`): Specialized assistants for different tasks
+- **Reusable Prompts** (`.github/prompts/`): Task-specific prompt templates
+
+**Agent Model Configuration**: Agents specify `model: grok-code-fast-1` but this field is ignored on github.com. Select Grok Code Fast 1 in your IDE's model picker to use it with custom agents.
+
+**Available Agents**:
+- `@project-manager`: Planning and milestone tracking
+- `@orchestrator`: Task coordination and execution
+- `@linux-sysadmin`: System administration tasks
+- `@security`: Security configurations and hardening
+- `@testing`: Installation validation and testing
+- `@documentation`: Documentation maintenance
+- `@evaluator`: Code quality assessment
+- `@pr-review`: Quality control gatekeeping
 
 ## Requirements
 
