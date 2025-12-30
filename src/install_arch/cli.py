@@ -18,6 +18,14 @@ from .package_manager import PackageManager
 def _get_registry_username(env_var: str, registry_name: str) -> str:
     """Get username for registry from environment or git config.
     
+    Attempts to resolve username in the following order:
+    1. Environment variable (e.g., DOCKERHUB_USERNAME, GITHUB_USERNAME)
+    2. GitHub username from git remote origin URL (assumes GitHub-based workflow)
+    
+    Note: The git fallback extracts the GitHub username, which is typically
+    appropriate for both GitHub Container Registry and Docker Hub in GitHub-based
+    projects where usernames often match.
+    
     Args:
         env_var: Environment variable name to check (e.g., 'DOCKERHUB_USERNAME')
         registry_name: Human-readable registry name for error messages
@@ -33,7 +41,8 @@ def _get_registry_username(env_var: str, registry_name: str) -> str:
     if username:
         return username
     
-    # Fallback: extract from git remote origin URL
+    # Fallback: extract GitHub username from git remote origin URL
+    # This assumes a GitHub-based workflow where the GitHub username is appropriate
     try:
         result = subprocess.run(
             ["git", "config", "--get", "remote.origin.url"],
