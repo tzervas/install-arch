@@ -7,8 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Ventoy Bootloader Integration**: Switched USB preparation to use Ventoy universal bootloader for improved bootability across UEFI and legacy BIOS systems
+- **Enhanced Checksum Verification**: Added dynamic official mirror retrieval with graceful fallback to local checksums
+- **Blackwell Station Customizations**: Added E5-2665 v4 server-specific configurations including user environment setup, SSH key management, libvirt hooks, and network bridge configuration
+- **Automated Release Workflow**: Implemented semantic versioning with GitHub Actions for automatic version bumping and release creation on merge to main
+
+### Changed
+- **USB Preparation Workflow**: Updated to use Ventoy instead of manual ISO extraction, with configuration files moved to `/configs/` directory
+- **Documentation**: Updated installation instructions to reflect new Ventoy-based workflow
+
 ### Fixed
-- **USB Installer**: Changed from dd-to-partition to ISO content extraction to avoid partition table conflicts. The script now properly extracts ISO contents to a FAT32 partition and verifies bootloader files, preventing boot issues caused by writing an ISO (which contains its own partition table) to a partition rather than a raw device.
+- **Bootability Issues**: Resolved USB boot detection problems by implementing Ventoy bootloader
 
 ## [1.0.0] - 2024-12-01
 

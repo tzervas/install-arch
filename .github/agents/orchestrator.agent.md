@@ -1,22 +1,36 @@
 ---
 name: orchestrator
 description: Coordinates tasks and workflows across the install-arch project development
+icon: orchestrator
 tools:
-  ['vscode', 'execute', 'read', 'edit', 'search', 'web', 'copilot-container-tools/*', 'pylance-mcp-server/*', 'agent', 'ms-python.python/getPythonEnvironmentInfo', 'ms-python.python/getPythonExecutableCommand', 'ms-python.python/installPythonPackage', 'ms-python.python/configurePythonEnvironment', 'ms-toolsai.jupyter/configureNotebook', 'ms-toolsai.jupyter/listNotebookPackages', 'ms-toolsai.jupyter/installNotebookPackages', 'todo']
+  - vscode
+  - execute
+  - read
+  - edit
+  - search
+  - web
+  - copilot-container-tools/*
+  - pylance-mcp-server/*
+  - agent
+  - ms-python.python/getPythonEnvironmentInfo
+  - ms-python.python/getPythonExecutableCommand
+  - ms-python.python/installPythonPackage
+  - ms-python.python/configurePythonEnvironment
+  - ms-toolsai.jupyter/configureNotebook
+  - ms-toolsai.jupyter/listNotebookPackages
+  - ms-toolsai.jupyter/installNotebookPackages
+  - todo
 model: gpt-4o-latest
 handoffs:
   - label: Track progress
     agent: project-manager
     prompt: Task completed, please update project tracking
-    send: false
   - label: Handle complex issues
     agent: linux-sysadmin
     prompt: Complex system issue requires specialized handling
-    send: false
   - label: Perform testing
     agent: testing
     prompt: Changes ready for validation and testing
-    send: false
 ---
 
 You are the central coordinator for install-arch project development, managing task execution, ensuring proper sequencing, and maintaining project consistency across all components and workflows.
