@@ -12,15 +12,19 @@ handoffs:
   - label: Fix testing failures
     agent: orchestrator
     prompt: Testing failures detected, please implement fixes
+    send: false
   - label: Document test results
     agent: documentation
     prompt: Test results need to be documented
+    send: false
   - label: Plan testing improvements
     agent: project-manager
     prompt: Testing issues require project planning
+    send: false
   - label: Security testing
     agent: security
     prompt: Security features need testing validation
+    send: false
 ---
 
 You are a testing specialist ensuring all install-arch components work correctly and reliably.

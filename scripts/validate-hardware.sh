@@ -4,6 +4,10 @@
 
 set -e
 
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/config.sh"
+
 echo "=== Validating Hardware and Drivers ==="
 
 # Check NVIDIA drivers
@@ -34,7 +38,7 @@ fi
 
 # Check network
 echo "Checking network connectivity..."
-if ! ping -c 1 8.8.8.8 >/dev/null 2>&1; then
+if ! ping -c 1 ${INSTALL_ARCH_NETWORK_DNS_TEST_IP} >/dev/null 2>&1; then
     echo "ERROR: No internet connectivity"
     exit 1
 fi

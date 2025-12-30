@@ -4,6 +4,11 @@
 
 set -euo pipefail
 
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+source "$PROJECT_ROOT/scripts/config.sh"
+
 IMAGE_PATH="$1"
 VM_NAME="${2:-test-arch}"
 
@@ -20,8 +25,8 @@ qemu-system-x86_64 \
     -net nic,model=virtio -net user \
     -nographic \
     -serial mon:stdio \
-    -monitor telnet:127.0.0.1:4444,server,nowait \
-    -qmp tcp:127.0.0.1:4445,server,nowait \
+    -monitor telnet:${INSTALL_ARCH_VIRTUALIZATION_QEMU_HOST_IP}:${INSTALL_ARCH_VIRTUALIZATION_QEMU_MONITOR_PORT},server,nowait \
+    -qmp tcp:${INSTALL_ARCH_VIRTUALIZATION_QEMU_HOST_IP}:${INSTALL_ARCH_VIRTUALIZATION_QEMU_QMP_PORT},server,nowait \
     > vm.log 2>&1 &
 VM_PID=$!
 
@@ -56,7 +61,7 @@ ssh -o StrictHostKeyChecking=no packer@localhost -p 2222 << 'EOF'
     systemctl is-system running && echo "✅ systemd running"
 
     # Check network
-    ping -c 1 8.8.8.8 && echo "✅ network working"
+    ping -c 1 ${INSTALL_ARCH_NETWORK_DNS_TEST_IP} && echo "✅ network working"
 
     # Check packages
     pacman -Q | head -5 && echo "✅ pacman working"
@@ -69,7 +74,7 @@ EOF
 
 # Stop VM
 echo "Stopping VM..."
-echo "quit" | nc 127.0.0.1 4445 || true
+echo "quit" | nc ${INSTALL_ARCH_VIRTUALIZATION_QEMU_HOST_IP} ${INSTALL_ARCH_VIRTUALIZATION_QEMU_QMP_PORT} || true
 sleep 5
 kill $VM_PID 2>/dev/null || true
 
