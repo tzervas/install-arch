@@ -62,7 +62,74 @@ EOF
 
 chmod +x "$HOME/.local/bin/setup-monitors"
 
+# Blackwell Station specific configurations
+echo "Applying Blackwell Station user configurations..."
+
+# Set up SSH directory and keys (if available)
+mkdir -p "$HOME/.ssh"
+chmod 700 "$HOME/.ssh"
+
+# Check for SSH key in environment or create placeholder
+if [ -n "$SSH_AUTHORIZED_KEY" ]; then
+    echo "$SSH_AUTHORIZED_KEY" >> "$HOME/.ssh/authorized_keys"
+    chmod 600 "$HOME/.ssh/authorized_keys"
+    echo "SSH key added to authorized_keys"
+else
+    echo "Warning: No SSH key provided. Add your public key to ~/.ssh/authorized_keys"
+fi
+
+# Configure git for Blackwell Station
+git config --global user.name "Kang"
+git config --global user.email "kang@blackwell-station.local"
+git config --global init.defaultBranch main
+git config --global pull.rebase true
+
+# Set up development directories
+mkdir -p "$HOME/Projects"
+mkdir -p "$HOME/.config/libvirt"
+mkdir -p "$HOME/.local/share/libvirt/images"
+
+# Configure libvirt for user
+cat > "$HOME/.config/libvirt/libvirt.conf" << 'EOF'
+# Libvirt user configuration for Blackwell Station
+uri_default = "qemu:///system"
+EOF
+
+# Set up basic aliases for virtualization work
+cat >> "$HOME/.bashrc" << 'EOF'
+
+# Blackwell Station aliases
+alias vms='virsh list --all'
+alias vm-start='virsh start'
+alias vm-stop='virsh shutdown'
+alias vm-destroy='virsh destroy'
+alias vm-console='virsh console'
+alias docker-clean='docker system prune -f'
+alias logs='journalctl -f'
+EOF
+
+# Configure Docker rootless
+if [ -f "$HOME/.local/bin/dockerd-rootless-setuptool.sh" ]; then
+    echo "Docker rootless already configured"
+else
+    echo "Note: Run 'dockerd-rootless-setuptool.sh install' if Docker rootless is needed"
+fi
+
+# Set up basic monitoring shortcuts
+cat > "$HOME/.local/bin/system-status" << 'EOF'
+#!/bin/bash
+echo "=== Blackwell Station System Status ==="
+echo "CPU: $(nproc) cores"
+echo "Memory: $(free -h | grep '^Mem:' | awk '{print $2}')"
+echo "Disk: $(df -h / | tail -1 | awk '{print $4}') available"
+echo "VMs: $(virsh list --all | grep -c "running\|shut") running"
+echo "Docker: $(docker ps | wc -l) containers"
+echo "Uptime: $(uptime -p)"
+EOF
+chmod +x "$HOME/.local/bin/system-status"
+
 # Mark setup as complete
 touch "$SETUP_FLAG"
 
 echo "First-login setup complete!"
+echo "Welcome to Blackwell Station - E5-2665 v4 virtualization host"
