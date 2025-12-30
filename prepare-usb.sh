@@ -43,7 +43,9 @@ trap cleanup EXIT
 ISO_DIR="/home/spooky/Documents/projects/install-arch/iso"
 ISO_NAME="archlinux-2025.12.01-x86_64.iso"
 ISO_PATH="${ISO_DIR}/${ISO_NAME}"
-ISO_URL="https://mirror.rackspace.com/archlinux/iso/2025.12.01/${ISO_NAME}"
+# Dynamic URL construction for checksum retrieval
+ISO_BASE_URL="https://mirror.rackspace.com/archlinux/iso/2025.12.01"
+ISO_URL="${ISO_BASE_URL}/${ISO_NAME}"
 CONFIG_DIR="/home/spooky/Documents/projects/install-arch/configs"
 USB_DEVICE="/dev/sdb"
 ISO_PARTITION_SIZE_MB=2560  # 2.5GB for ISO contents
@@ -89,20 +91,93 @@ else
     echo -e "${GREEN}Using existing ISO: $ISO_PATH${NC}"
 fi
 
-# Verify ISO integrity
+# Verify ISO integrity with dynamic checksum retrieval
 echo -e "${YELLOW}Verifying ISO integrity...${NC}"
-if ! sha256sum -c "$ISO_DIR/sha256sums.txt" --ignore-missing "$ISO_PATH" >/dev/null 2>&1; then
-    echo -e "${RED}Error: ISO verification failed${NC}"
-    echo -e "${YELLOW}Expected checksums:${NC}"
-    grep "$ISO_NAME" "$ISO_DIR/sha256sums.txt" || echo "No checksum found for $ISO_NAME"
-    echo -e "${YELLOW}Actual checksum:${NC}"
-    sha256sum "$ISO_PATH"
+
+# Enhanced checksum verification with dynamic retrieval
+verify_iso_checksum() {
+    local iso_path="$1"
+    local local_checksum_file="$2"
+    local iso_name="$3"
+    local iso_url="$4"
+
+    echo -e "${BLUE}Performing multi-source checksum verification...${NC}"
+
+    # Calculate actual checksum
+    local actual_checksum
+    actual_checksum=$(sha256sum "$iso_path" | awk '{print $1}')
+    echo -e "${BLUE}Calculated checksum: ${actual_checksum}${NC}"
+
+    # Check local checksum file first
+    local local_checksum=""
+    if [ -f "$local_checksum_file" ]; then
+        local_checksum=$(grep "$iso_name" "$local_checksum_file" | awk '{print $1}' | head -1)
+        if [ -n "$local_checksum" ]; then
+            echo -e "${BLUE}Found local checksum: ${local_checksum}${NC}"
+            if [ "$local_checksum" = "$actual_checksum" ]; then
+                echo -e "${GREEN}✓ Local checksum verification passed${NC}"
+            else
+                echo -e "${RED}✗ Local checksum verification failed!${NC}"
+                echo -e "${YELLOW}Expected: $local_checksum${NC}"
+                return 1
+            fi
+        fi
+    fi
+
+    # Try to download official checksums from Arch Linux
+    echo -e "${BLUE}Attempting to download official checksums...${NC}"
+    local official_checksum=""
+    local checksum_url="${iso_url%/*}/sha256sums.txt"
+
+    # Try multiple mirrors in case one fails
+    local mirrors=(
+        "https://mirror.rackspace.com/archlinux/iso/2025.12.01"
+        "https://geo.mirror.pkgbuild.com/iso/2025.12.01"
+        "https://mirrors.kernel.org/archlinux/iso/2025.12.01"
+    )
+
+    for mirror in "${mirrors[@]}"; do
+        local mirror_checksum_url="${mirror%/*}/sha256sums.txt"
+        echo -e "${BLUE}Trying mirror: ${mirror_checksum_url}${NC}"
+
+        if curl -s --max-time 10 "$mirror_checksum_url" -o /tmp/arch-checksums.txt 2>/dev/null; then
+            official_checksum=$(grep "$iso_name" /tmp/arch-checksums.txt | awk '{print $1}' | head -1)
+            if [ -n "$official_checksum" ]; then
+                echo -e "${GREEN}✓ Downloaded official checksum: ${official_checksum}${NC}"
+                break
+            fi
+        fi
+    done
+
+    # Clean up temp file
+    rm -f /tmp/arch-checksums.txt
+
+    # Verify against official checksum if available
+    if [ -n "$official_checksum" ]; then
+        if [ "$official_checksum" = "$actual_checksum" ]; then
+            echo -e "${GREEN}✓ Official checksum verification passed${NC}"
+            return 0
+        else
+            echo -e "${RED}✗ Official checksum verification failed!${NC}"
+            echo -e "${YELLOW}Official: $official_checksum${NC}"
+            echo -e "${YELLOW}Actual:   $actual_checksum${NC}"
+            return 1
+        fi
+    else
+        echo -e "${YELLOW}⚠ Could not download official checksums${NC}"
+        if [ -n "$local_checksum" ]; then
+            echo -e "${YELLOW}⚠ Falling back to local checksum verification only${NC}"
+            return 0
+        else
+            echo -e "${RED}✗ No checksum verification possible!${NC}"
+            return 1
+        fi
+    fi
+}
+
+if ! verify_iso_checksum "$ISO_PATH" "$ISO_DIR/sha256sums.txt" "$ISO_NAME" "$ISO_URL"; then
     exit 1
 fi
-echo -e "${GREEN}ISO verified successfully${NC}"
-echo -e "${YELLOW}ISO integrity verification is currently disabled due to a known sha256sum issue.${NC}"
-# Automated verification temporarily disabled due to sha256sum bug:
-# if ! sha256sum -c "$ISO_DIR/sha256sums.txt" --ignore-missing "$ISO_PATH" >/dev/null 2>&1; then
 #     echo -e "${RED}Error: ISO verification failed${NC}"
 #     exit 1
 # fi
