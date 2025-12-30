@@ -3,6 +3,10 @@
 
 set -e
 
+# Load configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/config.sh"
+
 # Cleanup function
 cleanup() {
     local exit_code=$?
@@ -24,15 +28,12 @@ cleanup() {
 
 trap cleanup EXIT
 
-# Configuration
-ISO_DIR="/home/spooky/Documents/projects/install-arch/iso"
-ISO_NAME="archlinux-2025.12.01-x86_64.iso"
-ISO_PATH="${ISO_DIR}/${ISO_NAME}"
-# Dynamic URL construction for checksum retrieval
-ISO_BASE_URL="https://mirror.rackspace.com/archlinux/iso/2025.12.01"
-ISO_URL="${ISO_BASE_URL}/${ISO_NAME}"
-CONFIG_DIR="/home/spooky/Documents/projects/install-arch/configs"
-USB_DEVICE="/dev/sdb"
+# Configuration (loaded from config.sh)
+ISO_DIR="${INSTALL_ARCH_ISO_DIR}"
+ISO_NAME="${INSTALL_ARCH_ISO_FILENAME}"
+ISO_PATH="${INSTALL_ARCH_ISO_PATH}"
+CONFIG_DIR="${INSTALL_ARCH_CONFIG_DIR}"
+USB_DEVICE="${INSTALL_ARCH_USB_DEVICE}"
 
 # Colors
 RED='\033[0;31m'
@@ -76,10 +77,10 @@ else
 fi
 
 # Download Ventoy if needed
-VENTOY_VERSION="1.0.99"
-VENTOY_TAR="ventoy-${VENTOY_VERSION}-linux.tar.gz"
-VENTOY_URL="https://github.com/ventoy/Ventoy/releases/download/v${VENTOY_VERSION}/${VENTOY_TAR}"
-VENTOY_DIR="ventoy-${VENTOY_VERSION}"
+VENTOY_VERSION="${INSTALL_ARCH_VERSIONS_VENTOY_VERSION}"
+VENTOY_TAR="${INSTALL_ARCH_VENTOY_EXTRACT_DIR}.tar.gz"
+VENTOY_URL="${INSTALL_ARCH_VENTOY_URL}"
+VENTOY_DIR="${INSTALL_ARCH_VENTOY_EXTRACT_DIR}"
 
 if [ ! -d "$VENTOY_DIR" ]; then
     echo -e "${YELLOW}Downloading Ventoy...${NC}"
@@ -141,11 +142,12 @@ verify_iso_checksum() {
     local checksum_url="${iso_url%/*}/sha256sums.txt"
 
     # Try multiple mirrors in case one fails
-    local mirrors=(
-        "https://mirror.rackspace.com/archlinux/iso/2025.12.01"
-        "https://geo.mirror.pkgbuild.com/iso/2025.12.01"
-        "https://mirrors.kernel.org/archlinux/iso/2025.12.01"
-    )
+    local mirrors=($INSTALL_ARCH_URLS_ARCH_MIRRORS)
+    # Append version to each mirror
+    local version_mirrors=()
+    for mirror in "${mirrors[@]}"; do
+        version_mirrors+=("${mirror}/${INSTALL_ARCH_VERSIONS_ARCH_ISO_VERSION}")
+    done
 
     for mirror in "${mirrors[@]}"; do
         local mirror_checksum_url="${mirror%/*}/sha256sums.txt"
