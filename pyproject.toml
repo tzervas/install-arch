@@ -58,11 +58,11 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.semantic_release]
-version_toml = "pyproject.toml:project.version"
+version_toml = ["pyproject.toml", "project", "version"]
 version_source = "tag"
 branch = "main"
 changelog_file = "CHANGELOG.md"
-build_command = false
+build_command = "echo 'No build step required'"
 upload_to_pypi = false
 upload_to_release = true
 github_token = "GITHUB_TOKEN"
