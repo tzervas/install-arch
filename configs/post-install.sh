@@ -361,10 +361,18 @@ else
     echo "Docker not installed, skipping Docker security configuration"
 fi
 
-# Disable Unnecessary Services
-echo "Disabling unnecessary services (bluetooth, cups)..."
-systemctl disable bluetooth.service 2>/dev/null || true
-systemctl disable cups.service 2>/dev/null || true
+# Disable Peripheral Services (optional)
+# By default, leave bluetooth and cups enabled because their packages are installed
+# and expected to be usable. To harden a headless/minimal system, set
+# DISABLE_PERIPHERAL_SERVICES=1 in the environment before running this script.
+DISABLE_PERIPHERAL_SERVICES="${DISABLE_PERIPHERAL_SERVICES:-0}"
+if [ "$DISABLE_PERIPHERAL_SERVICES" = "1" ]; then
+    echo "Disabling peripheral services (bluetooth, cups) as requested..."
+    systemctl disable bluetooth.service 2>/dev/null || true
+    systemctl disable cups.service 2>/dev/null || true
+else
+    echo "Leaving bluetooth and cups services enabled (DISABLE_PERIPHERAL_SERVICES=0)."
+fi
 
 echo "Security hardening configuration complete!"
 
