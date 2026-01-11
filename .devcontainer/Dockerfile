@@ -37,8 +37,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install uv for Python package management
-RUN pip3 install --break-system-packages uv
+# Install uv for Python package management without modifying system Python packages
+RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
 
 # Create vscode user
 RUN useradd -m -s /bin/bash -u 1000 vscode && \
