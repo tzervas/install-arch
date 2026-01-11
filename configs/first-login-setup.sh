@@ -215,9 +215,14 @@ else
     echo "Warning: No SSH key provided. Add your public key to ~/.ssh/authorized_keys"
 fi
 
-# Configure git for Blackwell Station
-git config --global user.name "Kang"
-git config --global user.email "kang@blackwell-station.local"
+# Configure git for Blackwell Station (parameterized via environment)
+if [ -n "${GIT_USER_NAME:-}" ] && [ -n "${GIT_USER_EMAIL:-}" ]; then
+    git config --global user.name "$GIT_USER_NAME"
+    git config --global user.email "$GIT_USER_EMAIL"
+else
+    echo "Warning: GIT_USER_NAME and/or GIT_USER_EMAIL not set. Skipping git identity configuration."
+    echo "         Set these environment variables and configure git manually if needed."
+fi
 git config --global init.defaultBranch main
 git config --global pull.rebase true
 
