@@ -6,7 +6,7 @@ ARG MODE=mount
 ARG BRANCH=main
 ARG DEPTH=full
 ARG VERSION=latest
-ARG REPO_URL=https://github.com/spooky/install-arch.git
+ARG REPO_URL=https://github.com/tzervas/install-arch.git
 
 # Set environment variables for runtime
 ENV MODE=$MODE
