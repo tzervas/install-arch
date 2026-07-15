@@ -42,3 +42,64 @@ jobs:
         uv run ruff check src/ tests/
         uv run mypy src/install_arch/
         uv run ruff format --check src/ tests/
+
+  devcontainer:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Dev Container
+      run: |
+        # Build the Dev Container using the official Dev Containers CLI
+        npx -y @devcontainers/cli build --workspace-folder .
+
+        echo "Testing Dev Container build..."
+        # Run checks inside the built Dev Container
+        npx -y @devcontainers/cli exec --workspace-folder . -- python --version
+        npx -y @devcontainers/cli exec --workspace-folder . -- uv --version
+        echo "Dev Container build successful"
+    - name: Test Dev Container functionality
+      run: |
+        echo "Testing Dev Container functionality..."
+        # This would run inside the built container
+        # Add any specific tests for the containerized environment here
+
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+
+    - name: Run semantic release
+      uses: cycjimmy/semantic-release-action@v3
+      with:
+        semantic_version: 18.0.0
+        extra_plugins: "@semantic-release/changelog @semantic-release/git@10.0.1 @semantic-release/github @semantic-release/exec"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SEMANTIC_RELEASE_EXEC_PREPARE_CMD: sed -i 's/^version = ".*"/version = "${nextRelease.version}"/' pyproject.toml
+        SEMANTIC_RELEASE_GIT_ASSETS: CHANGELOG.md pyproject.toml
+        SEMANTIC_RELEASE_GIT_MESSAGE: |
+          chore(release): ${nextRelease.version} [skip ci]
+
+          ${nextRelease.notes}
