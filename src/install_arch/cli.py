@@ -1,5 +1,7 @@
 """Command-line interface for development environment management."""
 
+import os
+import re
 import shutil
 import subprocess
 import sys
@@ -11,6 +13,60 @@ from .config import DevConfig
 from .filesystem import FileSystemOps
 from .guardrails import GuardrailsValidator
 from .package_manager import PackageManager
+
+
+def _get_registry_username(env_var: str, registry_name: str) -> str:
+    """Get username for registry from environment or git config.
+    
+    Attempts to resolve username in the following order:
+    1. Environment variable (e.g., DOCKERHUB_USERNAME, GITHUB_USERNAME)
+    2. GitHub username from git remote origin URL (assumes GitHub-based workflow)
+    
+    Note: The git fallback extracts the GitHub username, which is typically
+    appropriate for both GitHub Container Registry and Docker Hub in GitHub-based
+    projects where usernames often match.
+    
+    Args:
+        env_var: Environment variable name to check (e.g., 'DOCKERHUB_USERNAME')
+        registry_name: Human-readable registry name for error messages
+    
+    Returns:
+        Username string
+        
+    Raises:
+        click.ClickException: If username cannot be determined
+    """
+    # First check environment variable
+    username = os.environ.get(env_var)
+    if username:
+        return username
+    
+    # Fallback: extract GitHub username from git remote origin URL
+    # This assumes a GitHub-based workflow where the GitHub username is appropriate
+    try:
+        result = subprocess.run(
+            ["git", "config", "--get", "remote.origin.url"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        remote_url = result.stdout.strip()
+        
+        # Extract username from GitHub URL patterns:
+        # https://github.com/username/repo.git
+        # git@github.com:username/repo.git
+        match = re.search(r'github\.com[:/]([^/]+)/', remote_url)
+        if match:
+            return match.group(1)
+    except (subprocess.CalledProcessError, AttributeError):
+        pass
+    
+    # If all else fails, provide helpful error message
+    raise click.ClickException(
+        f"Could not determine username for {registry_name}. "
+        f"Please set the {env_var} environment variable.\n"
+        f"Example: export {env_var}=your-username"
+    )
 
 
 @click.group()
@@ -297,11 +353,14 @@ def devcontainer_push(ctx, registry):
 
     image_tag = f"install-arch-dev:{version}"
 
+    # Get usernames dynamically from environment or git config
     registries = []
     if registry in ["dockerhub", "all"]:
-        registries.append(("docker.io", f"yourusername/{image_tag}"))  # Replace with actual username
+        dockerhub_username = _get_registry_username("DOCKERHUB_USERNAME", "Docker Hub")
+        registries.append(("docker.io", f"{dockerhub_username}/{image_tag}"))
     if registry in ["ghcr", "all"]:
-        registries.append(("ghcr.io", f"yourusername/install-arch/{image_tag}"))  # Replace with actual
+        github_username = _get_registry_username("GITHUB_USERNAME", "GitHub Container Registry")
+        registries.append(("ghcr.io", f"{github_username}/install-arch/{image_tag}"))
 
     for reg_url, full_tag in registries:
         click.echo(f"Pushing to {reg_url}...")

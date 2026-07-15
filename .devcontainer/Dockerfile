@@ -6,7 +6,7 @@ ARG MODE=mount
 ARG BRANCH=main
 ARG DEPTH=full
 ARG VERSION=latest
-ARG REPO_URL=https://github.com/spooky/install-arch.git
+ARG REPO_URL=https://github.com/tzervas/install-arch.git
 
 # Set environment variables for runtime
 ENV MODE=$MODE
@@ -37,8 +37,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install uv for Python package management
-RUN pip3 install --break-system-packages uv
+# Install uv for Python package management without modifying system Python packages
+RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
 
 # Create vscode user
 RUN useradd -m -s /bin/bash -u 1000 vscode && \
