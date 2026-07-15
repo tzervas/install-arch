@@ -1,5 +1,90 @@
 #!/bin/bash
 # Test VM for install-arch USB installer
+# SAFETY: This script includes checks to prevent accidental use on production systems
+
+set -euo pipefail
+
+# Function to detect if running in a VM environment
+detect_vm_environment() {
+    local is_vm=false
+    local vm_type=""
+    
+    # Check systemd-detect-virt if available
+    if command -v systemd-detect-virt &> /dev/null; then
+        local virt_output
+        virt_output=$(systemd-detect-virt 2>/dev/null || echo "none")
+        if [[ "$virt_output" != "none" ]]; then
+            is_vm=true
+            vm_type="$virt_output"
+        fi
+    fi
+    
+    # Check /sys/class/dmi/id/product_name for VM indicators (case-insensitive)
+    if [[ -r /sys/class/dmi/id/product_name ]]; then
+        local product_name
+        product_name=$(cat /sys/class/dmi/id/product_name 2>/dev/null || echo "")
+        # Convert to lowercase for case-insensitive matching
+        local product_name_lower="${product_name,,}"
+        if [[ "$product_name_lower" =~ (qemu|kvm|virtualbox|vmware|xen) ]]; then
+            is_vm=true
+            # Only add if not already detected
+            if [[ -z "$vm_type" ]]; then
+                vm_type="${BASH_REMATCH[1]}"
+            fi
+        fi
+    fi
+    
+    # Check for hypervisor CPU flag (as a complete word)
+    if grep -qE "^flags[[:space:]]*:.*[[:space:]]hypervisor([[:space:]]|$)" /proc/cpuinfo 2>/dev/null; then
+        is_vm=true
+        vm_type="${vm_type:-hypervisor}"
+    fi
+    
+    if [[ "$is_vm" == "true" ]]; then
+        echo "VM:$vm_type"
+        return 0
+    else
+        echo "BARE_METAL"
+        return 1
+    fi
+}
+
+# Function to validate this is a safe test environment
+validate_safe_environment() {
+    echo "=== VM Environment Safety Check ==="
+    echo
+    
+    local env_check
+    env_check=$(detect_vm_environment)
+    
+    if [[ "$env_check" == "BARE_METAL" ]]; then
+        echo "⚠️  WARNING: This script is designed to run in a VM environment only!"
+        echo "⚠️  Detection indicates you are running on BARE METAL hardware."
+        echo
+        echo "This script will pass a physical USB device directly to QEMU."
+        echo "Running this on a production system could lead to:"
+        echo "  - Data loss on the USB device"
+        echo "  - System instability"
+        echo "  - Unintended hardware access"
+        echo
+        echo "If you are certain this is a test system and want to proceed,"
+        echo "you must explicitly confirm by setting the environment variable:"
+        echo "  export INSTALL_ARCH_ALLOW_BARE_METAL=1"
+        echo
+        
+        if [[ "${INSTALL_ARCH_ALLOW_BARE_METAL:-0}" != "1" ]]; then
+            echo "❌ Aborting for safety. Set INSTALL_ARCH_ALLOW_BARE_METAL=1 to override."
+            exit 1
+        else
+            echo "⚠️  Override enabled. Proceeding with EXTREME CAUTION."
+            echo
+        fi
+    else
+        echo "✓ VM environment detected: ${env_check#VM:}"
+        echo "✓ Safe to proceed with USB device passthrough"
+        echo
+    fi
+}
 
 USB_DEVICE="${1:-}"
 
@@ -16,6 +101,9 @@ if [[ ! -b "$USB_DEVICE" ]]; then
     echo "Error: USB device $USB_DEVICE not found"
     exit 1
 fi
+
+# Validate we're in a safe VM environment before proceeding
+validate_safe_environment
 
 echo "Testing install-arch USB installer in VM"
 echo "========================================"
