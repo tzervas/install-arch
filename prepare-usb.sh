@@ -297,6 +297,13 @@ echo -e "${YELLOW}Creating configuration directory...${NC}"
 CONFIG_USB_DIR="$VENTOY_MOUNT/configs"
 mkdir -p "$CONFIG_USB_DIR"
 
+# Update passwords in config files from .env
+echo -e "${YELLOW}Updating passwords from .env file...${NC}"
+if ! "$SCRIPT_DIR/update-passwords.sh"; then
+    echo -e "${RED}Error: Failed to update passwords${NC}"
+    exit 1
+fi
+
 # Copy configuration files
 echo -e "${YELLOW}Copying configuration files...${NC}"
 for file in "$CONFIG_DIR"/*; do
@@ -348,7 +355,7 @@ ARCH LINUX AUTOMATED INSTALLER - QUICK START
 
 4. After installation and reboot:
    - Login as: kang
-   - Password: changeme123 (you'll be forced to change it)
+   - Password: ${INSTALL_ARCH_USER_PASSWORD:-changeme123} (you'll be forced to change it)
 
 5. Complete post-installation:
    sudo bash /path/to/configs/post-install.sh
@@ -382,4 +389,6 @@ echo "5. Follow instructions in configs/QUICKSTART.txt"
 echo ""
 echo -e "${YELLOW}IMPORTANT: You must edit the archinstall-config.json${NC}"
 echo -e "${YELLOW}to set your LUKS encryption password before running!${NC}"
+echo -e "${YELLOW}Current LUKS password: ${INSTALL_ARCH_LUKS_PASSWORD:-testluks}${NC}"
+echo -e "${YELLOW}Current user password: ${INSTALL_ARCH_USER_PASSWORD:-changeme123}${NC}"
 echo ""

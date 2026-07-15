@@ -11,7 +11,7 @@ users:
     groups: sudo, docker, kvm, libvirt
     lock_passwd: true
     ssh_authorized_keys:
-      - ${jsonencode(ssh_authorized_key)}
+      - ${SSH_AUTHORIZED_KEY}
 
 package_update: true
 package_upgrade: true
