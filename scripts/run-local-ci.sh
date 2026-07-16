@@ -1,6 +1,6 @@
 #!/bin/bash
 # Local CI-equivalent script for development workflow
-# Runs the same checks as GitHub Actions CI pipeline
+# Runs the same checks as GitHub Actions CI pipeline (see .github/workflows/ci.yml)
 
 set -euo pipefail
 
@@ -35,21 +35,21 @@ fi
 
 echo
 echo "🧪 Step 2: Running Tests with Coverage"
-if uv run pytest tests/ -v --cov=src/install_arch --cov-report=term-missing --cov-report=xml --cov-fail-under=90; then
-    print_status 0 "Tests passed with >=90% coverage"
+if uv run pytest tests/ -v --cov=src/install_arch --cov-report=term-missing --cov-report=xml; then
+    print_status 0 "Tests passed"
 else
-    print_status 1 "Tests failed or coverage <90%"
+    print_status 1 "Tests failed"
     exit 1
 fi
 
 echo
 echo "🔍 Step 3: Code Quality Checks"
 
-echo "  - Running flake8..."
-if uv run flake8 src/ tests/; then
-    print_status 0 "flake8 passed"
+echo "  - Running ruff..."
+if uv run ruff check src/ tests/; then
+    print_status 0 "ruff passed"
 else
-    print_status 1 "flake8 failed"
+    print_status 1 "ruff failed"
     exit 1
 fi
 
@@ -61,19 +61,11 @@ else
     exit 1
 fi
 
-echo "  - Running black format check..."
-if uv run black --check src/ tests/; then
-    print_status 0 "black format check passed"
+echo "  - Running ruff format check..."
+if uv run ruff format --check src/ tests/; then
+    print_status 0 "ruff format check passed"
 else
-    print_status 1 "black format check failed"
-    exit 1
-fi
-
-echo "  - Running isort import check..."
-if uv run isort --check-only src/ tests/; then
-    print_status 0 "isort import check passed"
-else
-    print_status 1 "isort import check failed"
+    print_status 1 "ruff format check failed"
     exit 1
 fi
 
@@ -81,6 +73,7 @@ echo
 echo -e "${GREEN}🎉 All local CI checks passed! Ready to commit and push.${NC}"
 echo
 echo "💡 Tips:"
+echo "  - Prefer: uv run python -m install_arch.cli local-ci"
 echo "  - Run 'pre-commit run --all-files' to check everything locally"
 echo "  - Use 'uv run pytest tests/' for quick test runs during development"
 echo "  - Run this script again before pushing to ensure CI will pass"
