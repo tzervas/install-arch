@@ -14,7 +14,7 @@ dependencies = [
     "click>=8.1.0",
     "rich>=13.0.0",
     "questionary>=2.0.0",
-    "cryptography>=41.0.0",
+    "cryptography>=48.0.1",
 ]
 
 [project.optional-dependencies]
