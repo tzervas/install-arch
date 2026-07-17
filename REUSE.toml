@@ -1,0 +1,27 @@
+version = 1
+
+# P24f REUSE bootstrap — package-level aggregate annotations.
+# File-level SPDX headers may be added incrementally; do not mass-rewrite.
+# Copyright holder: Tyler Zervas (2025-2026). License: MIT.
+# iso/** third-party artifacts (ipxe, Arch sigs/checksums) are NOT covered here.
+
+[[annotations]]
+path = [
+    "src/**",
+    "scripts/**",
+    "docs/**",
+    "tests/**",
+    "configs/**",
+    "iso/README.md",
+    "*.md",
+    "*.toml",
+    "*.sh",
+    "*.py",
+    "*.yml",
+    "*.yaml",
+    ".gitignore",
+    "uv.lock",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2025-2026 Tyler Zervas"
+SPDX-License-Identifier = "MIT"
