@@ -52,7 +52,7 @@ Use the automated USB preparation script:
 
 ```bash
 # Run the USB preparation script (recommended)
-sudo /home/spooky/Documents/projects/install-arch/prepare-usb.sh
+sudo "${INSTALL_ARCH_ROOT:-$HOME/install-arch}/prepare-usb.sh"
 ```
 
 The script will:

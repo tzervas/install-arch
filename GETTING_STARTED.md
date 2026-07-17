@@ -48,10 +48,12 @@ Your automated Arch Linux installer is ready! Here's what's been configured:
 
 ## Quick Start - Prepare Your USB Drive
 
+Clone this repo and set `INSTALL_ARCH_ROOT` to the clone path (defaults to the directory containing `prepare-usb.sh` when you run it from there).
+
 Run this single command to prepare your USB drive:
 
 ```bash
-sudo /home/spooky/Documents/projects/install-arch/prepare-usb.sh
+sudo "${INSTALL_ARCH_ROOT:-$HOME/install-arch}/prepare-usb.sh"
 ```
 
 This will:
@@ -66,7 +68,7 @@ This will:
 
 ### Step 1: Prepare USB (run on your current system)
 ```bash
-sudo /home/spooky/Documents/projects/install-arch/prepare-usb.sh
+sudo "${INSTALL_ARCH_ROOT:-$HOME/install-arch}/prepare-usb.sh"
 ```
 
 ### Step 2: Configure BIOS on target PC
@@ -105,14 +107,14 @@ The installer will:
 - Install development tools
 - Install virtualization tools (KVM, QEMU, Docker)
 - Install NVIDIA drivers
-- Configure user 'kang' with sudo access
+- Configure user `user` with sudo access
 
 ### Step 4: First Boot
 
 After installation completes and system reboots:
 
 1. **Enter LUKS password** at boot
-2. **Login as kang** (password: changeme123)
+2. **Login as user** (password: `<CHANGE_ON_FIRST_LOGIN>` — set via `configure-installer.sh` or `archinstall-config.json`)
 3. **Change password** (forced immediately)
 4. **Log out and log back in**
 
@@ -228,7 +230,7 @@ done
 
 ## Default Credentials
 
-- **Username**: kang
+- **Username**: user
 - **Initial Password**: changeme123 (must change on first login)
 - **Root Account**: Disabled (use sudo)
 
@@ -314,17 +316,17 @@ Check BIOS: VT-d and IOMMU must be enabled
 
 All configuration files are in:
 ```
-/home/spooky/Documents/projects/install-arch/configs/
+${INSTALL_ARCH_ROOT:-$HOME/install-arch}/configs/
 ```
 
 USB preparation script:
 ```
-/home/spooky/Documents/projects/install-arch/prepare-usb.sh
+${INSTALL_ARCH_ROOT:-$HOME/install-arch}/prepare-usb.sh
 ```
 
 ISO location:
 ```
-/home/spooky/Documents/projects/install-arch/iso/arch/archlinux-2025.12.01-x86_64.iso
+${INSTALL_ARCH_ROOT:-$HOME/install-arch}/iso/arch/archlinux-2025.12.01-x86_64.iso
 ```
 
 ---
@@ -332,7 +334,7 @@ ISO location:
 **Ready to proceed? Run:**
 
 ```bash
-sudo /home/spooky/Documents/projects/install-arch/prepare-usb.sh
+sudo "${INSTALL_ARCH_ROOT:-$HOME/install-arch}/prepare-usb.sh"
 ```
 
 This will prepare your USB drive for installation!

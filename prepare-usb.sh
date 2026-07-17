@@ -24,14 +24,17 @@ cleanup() {
 
 trap cleanup EXIT
 
+# Repository root (override with INSTALL_ARCH_ROOT when cloning elsewhere)
+INSTALL_ARCH_ROOT="${INSTALL_ARCH_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+
 # Configuration
-ISO_DIR="/home/spooky/Documents/projects/install-arch/iso"
+ISO_DIR="${INSTALL_ARCH_ROOT}/iso"
 ISO_NAME="archlinux-2025.12.01-x86_64.iso"
 ISO_PATH="${ISO_DIR}/${ISO_NAME}"
 # Dynamic URL construction for checksum retrieval
 ISO_BASE_URL="https://mirror.rackspace.com/archlinux/iso/2025.12.01"
 ISO_URL="${ISO_BASE_URL}/${ISO_NAME}"
-CONFIG_DIR="/home/spooky/Documents/projects/install-arch/configs"
+CONFIG_DIR="${INSTALL_ARCH_ROOT}/configs"
 USB_DEVICE="/dev/sdb"
 
 # Colors
@@ -345,7 +348,7 @@ ARCH LINUX AUTOMATED INSTALLER - QUICK START
    archinstall --config /root/archconfig/archinstall-config.json
 
 4. After installation and reboot:
-   - Login as: kang
+   - Login as: user
    - Password: changeme123 (you'll be forced to change it)
 
 5. Complete post-installation:
