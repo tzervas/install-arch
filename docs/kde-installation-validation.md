@@ -661,5 +661,4 @@ nvidia-smi -q -d PERFORMANCE
 virsh nodeinfo
 ```
 
-This comprehensive test plan ensures the KDE Plasma installation meets all functional, security, and user experience requirements.</content>
-<parameter name="filePath">/home/spooky/Documents/projects/install-arch/docs/kde-installation-validation.md
+This comprehensive test plan ensures the KDE Plasma installation meets all functional, security, and user experience requirements.

@@ -217,7 +217,7 @@ fi
 
 # Configure git for Blackwell Station
 git config --global user.name "Kang"
-git config --global user.email "kang@blackwell-station.local"
+git config --global user.email "user@example.local"
 git config --global init.defaultBranch main
 git config --global pull.rebase true
 
