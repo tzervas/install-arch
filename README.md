@@ -1,5 +1,10 @@
 # Arch Linux Automated Installer
 
+<!-- FLEET-BADGES:BEGIN -->
+[![CI](https://github.com/tzervas/install-arch/actions/workflows/fleet-ci.yml/badge.svg?branch=main)](https://github.com/tzervas/install-arch/actions/workflows/fleet-ci.yml?query=branch%3Amain)
+[![Security](https://github.com/tzervas/install-arch/actions/workflows/fleet-security.yml/badge.svg?branch=main)](https://github.com/tzervas/install-arch/actions/workflows/fleet-security.yml?query=branch%3Amain)
+<!-- FLEET-BADGES:END -->
+
 This project contains a complete automated installation system for Arch Linux configured as a high-performance virtualization host.
 
 ## Development Workflow
